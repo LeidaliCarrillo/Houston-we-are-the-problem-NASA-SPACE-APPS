@@ -4,7 +4,7 @@ https://github.com/user-attachments/assets/1f4c5c70-7bb6-439f-abc4-e371fa17c4c9
 
 # HOUSTON, WE ARE THE PROBLEM — U.S.S. Aether + NASA Open MCT
 
-Desarrollado por:
+Developed by:
 
 - **Leidalí Carrillo Fernández**
 - **Felipe Pereira Alarcón**
@@ -12,8 +12,7 @@ Desarrollado por:
 - **Jaqueline Adilene Carrillo Fernández**
 
 
-
-Juego cooperativo estilo *Keep Talking and Nobody Explodes*:
+Cooperative Game in the Style of Keep Talking and Nobody Explodes
 
 - **Astronauta** → juega el tablero de reparación (`/tablero.html`).
 - **Control en tierra** → monitorea la nave en **[NASA Open MCT](https://github.com/nasa/openmct)** (`/`) y guía al astronauta por voz con el manual (`/manual.html`, también dentro de Open MCT).
