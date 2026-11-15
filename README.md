@@ -2,7 +2,7 @@
 
 https://github.com/user-attachments/assets/1f4c5c70-7bb6-439f-abc4-e371fa17c4c9
 
-# HOUSTON, WE HAVE A PROBLEM — U.S.S. Aether + NASA Open MCT
+# HOUSTON, WE ARE THE PROBLEM — U.S.S. Aether + NASA Open MCT
 
 Desarrollado por:
 
