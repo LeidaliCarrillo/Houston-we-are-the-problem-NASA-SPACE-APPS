@@ -1,0 +1,2456 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Houston We Are The Problem</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --nasa-blue: #0b3d91;
+            --nasa-red: #fc3d21;
+            --crt-green: #22c55e;
+            --crt-amber: #f59e0b;
+            --metal-dark: #0f172a;
+            --metal-panel: #1e293b;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: #050811;
+            color: #e2e8f0;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        .font-mono-tech {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .crt-overlay {
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.22) 50%),
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            background-size: 100% 3px, 6px 100%;
+        }
+
+        .cartoon-wall-bg {
+            background-color: #6b7f93;
+            background-image:
+                linear-gradient(90deg, rgba(35, 49, 64, 0.45) 2px, transparent 2px),
+                linear-gradient(180deg, rgba(35, 49, 64, 0.45) 2px, transparent 2px),
+                radial-gradient(circle at 14px 14px, #47586b 2.5px, transparent 3px),
+                radial-gradient(circle at calc(100% - 14px) 14px, #47586b 2.5px, transparent 3px);
+            background-size: 260px 220px;
+        }
+
+        .rainbow-timer-bezel {
+            background: linear-gradient(90deg, #ff3b30, #ff9500, #ffcc00, #34c759, #00c7be, #007aff, #af52de);
+            padding: 4px;
+            border-radius: 16px;
+            border: 3px solid #233140;
+            box-shadow: 0 4px 0 rgba(35, 49, 64, 0.35);
+        }
+
+        .cartoon-outline {
+            border: 3.5px solid #233140;
+        }
+
+        .cartoon-shadow {
+            box-shadow: 0 6px 0 rgba(35, 49, 64, 0.32);
+        }
+
+        @keyframes shipBounce {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -54%) scale(1.06); }
+        }
+        .ship-flying {
+            animation: shipBounce 0.65s ease-in-out infinite;
+        }
+
+        @keyframes boomPop {
+            0% { transform: translate(-50%, -50%) scale(0.3); opacity: 1; }
+            60% { transform: translate(-50%, -50%) scale(1.45); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1.7); opacity: 0.95; }
+        }
+        .ship-exploded {
+            animation: boomPop 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        @keyframes starTwinkle {
+            0%, 100% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(1.25); filter: brightness(1.6) drop-shadow(0 0 8px #fde047); }
+        }
+        .star-target {
+            animation: starTwinkle 1.6s ease-in-out infinite;
+        }
+
+        .module-chassis {
+            background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+            border: 2px solid #334155;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 10px 25px rgba(0, 0, 0, 0.6);
+            position: relative;
+        }
+
+        .module-chassis::before, .module-chassis::after {
+            content: '•';
+            position: absolute;
+            top: 4px;
+            color: #475569;
+            font-size: 14px;
+            line-height: 1;
+        }
+        .module-chassis::before { left: 8px; }
+        .module-chassis::after { right: 8px; }
+
+        .led-status {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid #090d16;
+            transition: all 0.25s ease;
+        }
+        .led-off { background: #1e293b; box-shadow: inset 0 2px 4px rgba(0,0,0,0.8); }
+        .led-solved { background: #22c55e; box-shadow: 0 0 12px #22c55e, inset 0 0 4px #bbf7d0; }
+        .led-error { background: #ef4444; box-shadow: 0 0 14px #ef4444; }
+        .led-warning { background: #f59e0b; box-shadow: 0 0 10px #f59e0b; }
+
+        @keyframes radarSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .radar-sweep {
+            animation: radarSpin 4s linear infinite;
+            transform-origin: center;
+        }
+
+        @keyframes alertPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.35; }
+        }
+        .animate-alert {
+            animation: alertPulse 1s ease-in-out infinite;
+        }
+
+        #blackoutMask {
+            background: radial-gradient(circle 135px at var(--cursor-x, 50%) var(--cursor-y, 50%), rgba(5, 8, 17, 0.08) 0%, rgba(3, 5, 10, 0.95) 75%, rgba(2, 4, 8, 0.99) 100%);
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+
+        .station-scene-shell {
+            background: #7c8d9e;
+            border: 4px solid #233140;
+            box-shadow: inset 0 0 0 4px #9fb0c1, 0 10px 25px rgba(0, 0, 0, 0.55);
+        }
+
+        .station-bay-frame {
+            border: 3.5px solid #233140;
+            border-radius: 18px;
+            box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.35), 0 5px 0 rgba(35, 49, 64, 0.35);
+            position: relative;
+            transition: transform 0.15s ease;
+        }
+
+        .bay-bridge {
+            background: linear-gradient(180deg, #98aab9 0%, #8396a6 100%);
+        }
+        .bay-bridge-screen {
+            background: linear-gradient(180deg, #d7f3ff 0%, #9ee0fc 100%);
+            border: 3px solid #233140;
+            border-radius: 12px;
+            box-shadow: inset 0 0 14px rgba(255, 255, 255, 0.75);
+        }
+
+        .bay-lab {
+            background: linear-gradient(180deg, #b8c6d4 0%, #96a6b6 100%);
+        }
+        .bay-lab-glass {
+            background: linear-gradient(135deg, rgba(162, 184, 204, 0.88) 0%, rgba(119, 141, 163, 0.92) 55%, rgba(97, 118, 140, 0.95) 100%);
+            border: 3px solid #233140;
+            border-radius: 12px;
+            box-shadow: inset 6px 6px 0 rgba(255, 255, 255, 0.22);
+        }
+
+        .bay-engine-steel {
+            background: linear-gradient(180deg, #8b9aa8 0%, #718190 100%);
+        }
+        .bay-engine-gold {
+            background: linear-gradient(180deg, #d8c27a 0%, #bfa65a 100%);
+        }
+        .bay-engine-screen-cool {
+            background: linear-gradient(180deg, #93a7b8 0%, #778b9c 100%);
+            border: 3px solid #233140;
+            border-radius: 12px;
+        }
+        .bay-engine-screen-warm {
+            background: radial-gradient(circle at center, #fdf3c7 0%, #dfd19b 100%);
+            border: 3px solid #233140;
+            border-radius: 12px;
+        }
+
+        .station-screw {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #47586b;
+            border: 1.5px solid #233140;
+            position: absolute;
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #090d16; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        .ignition-btn {
+            transition: transform 0.08s ease, box-shadow 0.08s ease;
+            box-shadow: 0 8px 0 rgba(0,0,0,0.55), inset 0 4px 10px rgba(255,255,255,0.35);
+        }
+        .ignition-btn:active, .ignition-btn.held {
+            transform: translateY(5px);
+            box-shadow: 0 3px 0 rgba(0,0,0,0.55), inset 0 2px 6px rgba(0,0,0,0.4);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <div id="lobbyScreen" class="min-h-screen flex items-center justify-center p-4 bg-[radial-gradient(ellipse_at_top,#0f2347_0%,#050811_75%)]">
+        <div class="w-full max-w-4xl bg-slate-900/90 border border-blue-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-md">
+            
+            <div class="flex flex-col sm:flex-row items-center justify-between border-b border-slate-700/80 pb-5 mb-6 gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-full bg-[#0b3d91] border-2 border-white flex items-center justify-center shadow-[0_0_20px_rgba(11,61,145,0.8)] shrink-0">
+                        <span class="font-extrabold text-white tracking-tighter text-lg">NASA</span>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 text-[10px] font-mono-tech uppercase tracking-widest bg-red-600/20 text-red-400 border border-red-500/40 rounded">PROTOCOLO DE EMERGENCIA</span>
+                            <span class="text-xs font-mono-tech text-slate-400">CO-OP 2 JUGADORES</span>
+                        </div>
+                        <h1 class="text-2xl sm:text-3xl font-bold text-white tracking-tight mt-1">ÓRBITA CRÍTICA: EEI-09</h1>
+                    </div>
+                </div>
+
+                <button id="openSecondWindowBtn" type="button" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-xs sm:text-sm font-mono-tech text-cyan-300 flex items-center gap-2 transition cursor-pointer shadow-md">
+                    <span>🪟</span> Abrir 2ª Ventana (Misma PC)
+                </button>
+            </div>
+
+            <div class="bg-blue-950/40 border border-blue-500/25 rounded-2xl p-4 mb-6 text-sm text-slate-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                    <p class="font-semibold text-blue-300 mb-1">📡 ¿Cómo jugar en 2 pantallas o dispositivos?</p>
+                    <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                        Un jugador elige <strong>Control de Misión (Tierra)</strong> y el otro <strong>Astronauta (Estación Espacial)</strong>. Asegúrense de usar el <strong>mismo Código de Misión y Dificultad</strong>. ¡Cuidado con las tareas de mantenimiento aleatorio que aparecen en cada sala!
+                    </p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-7">
+                <div class="bg-slate-950/70 border border-slate-800 p-4 rounded-2xl">
+                    <label for="missionSeedInput" class="block text-xs font-mono-tech uppercase tracking-wider text-slate-400 mb-2">
+                        1. Código de Misión (Semilla Compartida)
+                    </label>
+                    <div class="flex gap-2">
+                        <input id="missionSeedInput" type="text" maxlength="16" value="APOLO-13"
+                            class="w-full bg-slate-900 border border-slate-700 focus:border-cyan-400 rounded-xl px-4 py-3 font-mono-tech text-lg font-bold text-cyan-300 uppercase tracking-widest outline-none"
+                            placeholder="EJ: APOLO-13">
+                        <button id="randomSeedBtn" type="button" title="Generar código aleatorio"
+                            class="px-4 py-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-lg transition cursor-pointer">
+                            🎲
+                        </button>
+                    </div>
+                    <p class="text-[11px] text-slate-400 mt-2">Ambos jugadores deben escribir exactamente este mismo código.</p>
+                </div>
+
+                <div class="bg-slate-950/70 border border-slate-800 p-4 rounded-2xl">
+                    <label class="block text-xs font-mono-tech uppercase tracking-wider text-slate-400 mb-2">
+                        2. Nivel de Amenaza Orbital
+                    </label>
+                    <div class="grid grid-cols-3 gap-2" id="difficultySelector">
+                        <button type="button" data-diff="easy" class="diff-btn py-3 px-2 rounded-xl border font-mono-tech text-xs sm:text-sm font-bold transition cursor-pointer bg-slate-900 border-slate-700 text-slate-300 hover:border-emerald-400">
+                            FÁCIL<br><span class="text-[10px] font-normal text-slate-400">3 Módulos • 5:30</span>
+                        </button>
+                        <button type="button" data-diff="normal" class="diff-btn py-3 px-2 rounded-xl border font-mono-tech text-xs sm:text-sm font-bold transition cursor-pointer bg-blue-600/25 border-cyan-400 text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.2)]">
+                            NORMAL<br><span class="text-[10px] font-normal text-cyan-200/70">5 Módulos • 5:00</span>
+                        </button>
+                        <button type="button" data-diff="hard" class="diff-btn py-3 px-2 rounded-xl border font-mono-tech text-xs sm:text-sm font-bold transition cursor-pointer bg-slate-900 border-slate-700 text-slate-300 hover:border-rose-400">
+                            DIFÍCIL<br><span class="text-[10px] font-normal text-slate-400">6 Módulos • 4:30</span>
+                        </button>
+                    </div>
+                    <p id="diffDesc" class="text-[11px] text-slate-400 mt-2">Equilibrado: 5 módulos repartidos en 3 salas, apagones y tareas de estación.</p>
+                </div>
+            </div>
+
+            <label class="block text-xs font-mono-tech uppercase tracking-wider text-slate-400 mb-3">
+                3. Selecciona tu Estación de Trabajo
+            </label>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button id="selectRoleNasaBtn" type="button" class="group text-left p-5 rounded-2xl bg-gradient-to-br from-[#0b3d91]/40 to-slate-900 border-2 border-blue-500/50 hover:border-cyan-400 transition-all cursor-pointer shadow-lg hover:shadow-cyan-500/20">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/40 text-blue-300 font-mono-tech text-xs font-bold">JUGADOR 1 • TIERRA</span>
+                        <span class="text-3xl group-hover:scale-110 transition-transform">🖥️</span>
+                    </div>
+                    <h2 class="text-xl font-bold text-white mb-1">Control de Misión NASA</h2>
+                    <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                        Tienes acceso a la <strong>Computadora de Manuales Técnicos</strong>, radar orbital y telemetría. Guía al astronauta paso a paso sin ver los paneles.
+                    </p>
+                </button>
+
+                <button id="selectRoleStationBtn" type="button" class="group text-left p-5 rounded-2xl bg-gradient-to-br from-amber-500/15 to-slate-900 border-2 border-amber-500/50 hover:border-amber-400 transition-all cursor-pointer shadow-lg hover:shadow-amber-500/20">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 font-mono-tech text-xs font-bold">JUGADOR 2 • ÓRBITA</span>
+                        <span class="text-3xl group-hover:scale-110 transition-transform">👨‍🚀</span>
+                    </div>
+                    <h2 class="text-xl font-bold text-white mb-1">Astronauta en la Estación</h2>
+                    <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                        Explora los <strong>3 compartimentos de la estación</strong>, resuelve los módulos con ayuda de Houston y atiende las emergencias de cada sala.
+                    </p>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="nasaView" class="hidden min-h-screen flex flex-col justify-between cartoon-wall-bg relative overflow-hidden select-none">
+
+        <svg class="absolute inset-0 w-full h-full pointer-events-none opacity-55" preserveAspectRatio="none">
+            <line x1="16%" y1="0" x2="16%" y2="85%" stroke="#233140" stroke-width="3"/>
+            <line x1="84%" y1="0" x2="84%" y2="85%" stroke="#233140" stroke-width="3"/>
+            <line x1="0" y1="36%" x2="100%" y2="36%" stroke="#233140" stroke-width="3"/>
+            <circle cx="15%" cy="12%" r="3" fill="#364859"/><circle cx="17%" cy="12%" r="3" fill="#364859"/>
+            <circle cx="15%" cy="34%" r="3" fill="#364859"/><circle cx="17%" cy="34%" r="3" fill="#364859"/>
+            <circle cx="83%" cy="12%" r="3" fill="#364859"/><circle cx="85%" cy="12%" r="3" fill="#364859"/>
+            <circle cx="83%" cy="34%" r="3" fill="#364859"/><circle cx="85%" cy="34%" r="3" fill="#364859"/>
+        </svg>
+
+        <div class="relative z-10 flex-1 flex flex-col items-center justify-between w-full max-w-5xl mx-auto px-3 sm:px-6 pt-2 sm:pt-3">
+            <div class="w-full max-w-[820px] bg-[#9fb5c9] cartoon-outline rounded-[28px] p-2 sm:p-2.5 cartoon-shadow relative">
+                <div class="relative w-full h-[220px] sm:h-[255px] rounded-[20px] bg-gradient-to-b from-[#d9e5f0] via-[#b8cadb] to-[#9db3c7] border-[3px] border-[#233140] overflow-hidden">
+
+                    <div class="absolute top-2.5 left-2.5 z-20 flex flex-col gap-1">
+                        <div class="flex items-center gap-1.5 bg-[#233140]/90 text-white px-2.5 py-1 rounded-lg border border-[#475d75] font-mono-tech text-[10px] sm:text-xs shadow">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                            <span>MISIÓN: <strong id="nasaMissionCode" class="text-cyan-300">---</strong></span>
+                            <span class="text-slate-400">|</span>
+                            <span id="nasaSolvedCounter" class="text-amber-300 font-bold">0/5</span>
+                        </div>
+
+                        <div class="flex items-center gap-1">
+                            <span id="nasaDiffLabel" class="px-2 py-0.5 rounded bg-[#233140]/85 text-slate-200 font-mono-tech text-[9px] font-bold uppercase">NORMAL</span>
+                            <button id="nasaAddStrikeBtn" title="Registrar fallo manualmente" class="px-2 py-0.5 rounded bg-red-600 hover:bg-red-500 text-white border border-[#233140] font-mono-tech text-[9px] font-bold cursor-pointer shadow-sm">
+                                +1 STRIKE
+                            </button>
+                            <button id="nasaExitBtn" class="px-2 py-0.5 rounded bg-slate-700 hover:bg-slate-600 text-white border border-[#233140] font-mono-tech text-[9px] font-bold cursor-pointer shadow-sm">
+                                SALIR
+                            </button>
+                        </div>
+
+                        <div id="nasaBlackoutAlert" class="hidden mt-0.5 px-2.5 py-1 rounded-lg bg-amber-400 text-[#233140] border-2 border-[#233140] font-mono-tech text-[10px] font-extrabold animate-bounce shadow">
+                            ⚡ ¡APAGÓN EN EEI! (SALA MOTORES)
+                        </div>
+                    </div>
+
+                    <div class="absolute top-2 left-1/2 -translate-x-1/2 z-20 rainbow-timer-bezel">
+                        <div class="bg-[#233140] px-4 sm:px-5 py-1 rounded-[11px] flex items-center justify-center">
+                            <span id="nasaTimerDisplay" class="font-mono-tech text-2xl sm:text-3xl font-extrabold tracking-widest text-[#34d399] drop-shadow-[0_0_8px_rgba(52,211,153,0.65)]">
+                                05:00
+                            </span>
+                        </div>
+                    </div>
+
+                    <svg viewBox="0 0 800 260" class="absolute inset-0 w-full h-full pointer-events-none" preserveAspectRatio="none">
+                        <defs>
+                            <marker id="redArrowHead" markerWidth="10" markerHeight="10" refX="7" refY="5" orient="auto">
+                                <path d="M 0 1 L 9 5 L 0 9 z" fill="#ef4444" />
+                            </marker>
+                        </defs>
+                        <path id="nasaTrajectoryPath"
+                              d="M 55 182 Q 305 55 575 182"
+                              fill="none"
+                              stroke="#ef4444"
+                              stroke-width="6"
+                              stroke-linecap="round"
+                              stroke-dasharray="16 14"
+                              marker-end="url(#redArrowHead)" />
+                        <g transform="translate(650, 245)">
+                            <circle cx="0" cy="0" r="144" fill="#60a5fa" opacity="0.25" />
+                            <circle cx="0" cy="0" r="134" fill="#635bff" stroke="#233140" stroke-width="5" />
+                            <path d="M -118 -45 C -90 -80, -35 -95, -5 -65 C 18 -42, -10 -15, -35 -12 C -65 -8, -80 15, -110 5 Z"
+                                  fill="#6ee734" stroke="#233140" stroke-width="3.5" />
+                            <path d="M 15 -95 C 55 -105, 105 -75, 118 -35 C 95 -10, 55 -20, 35 -48 C 20 -68, 5 -80, 15 -95 Z"
+                                  fill="#6ee734" stroke="#233140" stroke-width="3.5" />
+                            <path d="M -45 20 C -10 10, 45 25, 65 65 C 40 95, -25 95, -55 60 Z"
+                                  fill="#6ee734" stroke="#233140" stroke-width="3.5" />
+                            <path d="M -98 -68 A 118 118 0 0 1 -20 -116" fill="none" stroke="#a5f3fc" stroke-width="5" stroke-linecap="round" opacity="0.7" />
+                        </g>
+                    </svg>
+
+                    <div id="nasaShipContainer" class="absolute z-10 ship-flying transition-all duration-700 ease-linear" style="left: 7%; top: 70%;">
+                        <div id="nasaShipSprite" class="relative flex items-center justify-center">
+                            <svg width="46" height="46" viewBox="0 0 64 64" class="drop-shadow-[0_3px_3px_rgba(35,49,64,0.5)]">
+                                <path d="M 10 38 Q 2 44 8 52 Q 16 48 20 42 Z" fill="#f97316" stroke="#233140" stroke-width="2.5"/>
+                                <path d="M 12 39 Q 7 43 11 48 Q 16 45 18 41 Z" fill="#facc15"/>
+                                <path d="M 22 24 L 12 18 L 18 32 Z" fill="#ef4444" stroke="#233140" stroke-width="2.5" stroke-linejoin="round"/>
+                                <path d="M 32 38 L 38 50 L 24 44 Z" fill="#ef4444" stroke="#233140" stroke-width="2.5" stroke-linejoin="round"/>
+                                <path d="M 18 42 C 24 22, 42 12, 54 10 C 52 22, 42 40, 22 46 Z" fill="#f8fafc" stroke="#233140" stroke-width="3" stroke-linejoin="round"/>
+                                <path d="M 43 14 C 48 12, 51 11, 54 10 C 53 13, 52 16, 50 21 Z" fill="#ef4444" stroke="#233140" stroke-width="2.5"/>
+                                <circle cx="35" cy="29" r="6" fill="#38bdf8" stroke="#233140" stroke-width="2.5"/>
+                                <circle cx="33.5" cy="27.5" r="2" fill="#ffffff"/>
+                            </svg>
+                        </div>
+                        <div id="nasaExplosionSprite" class="hidden text-4xl sm:text-5xl select-none drop-shadow-[0_4px_6px_rgba(0,0,0,0.6)]">
+                            💥
+                        </div>
+                    </div>
+
+                    <div class="absolute bottom-0 left-1/2 -translate-x-1/2 z-20 bg-[#b8cadb] border-t-[3.5px] border-x-[3.5px] border-[#233140] rounded-t-[20px] px-5 py-2 shadow-[0_-2px_0_rgba(255,255,255,0.4)]">
+                        <div id="nasaStrikesBox" class="flex items-center gap-3">
+                            <span class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#eef4fa] border-[3px] border-[#233140] flex items-center justify-center text-sm font-extrabold text-transparent transition-all">X</span>
+                            <span class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#eef4fa] border-[3px] border-[#233140] flex items-center justify-center text-sm font-extrabold text-transparent transition-all">X</span>
+                            <span class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#eef4fa] border-[3px] border-[#233140] flex items-center justify-center text-sm font-extrabold text-transparent transition-all">X</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="w-full max-w-[740px] flex flex-col items-center mt-2 sm:mt-3 z-20">
+                <div class="w-[94%] sm:w-[88%] bg-[#c3d3e3] cartoon-outline rounded-t-[24px] p-2.5 sm:p-3.5 pb-3 shadow-xl relative">
+                    <div class="w-2.5 h-2.5 rounded-full bg-[#233140] mx-auto mb-2"></div>
+
+                    <div class="w-full h-[270px] sm:h-[300px] bg-[#f4f8fc] border-[3px] border-[#233140] rounded-[14px] flex flex-col overflow-hidden text-[#1e293b] relative shadow-inner">
+                        <div class="bg-[#e2ecf5] border-b-2 border-[#cbd5e1] px-2.5 py-1.5 flex items-center justify-between gap-1.5 shrink-0">
+                            <div class="flex flex-wrap items-center gap-1" id="manualTabs">
+                                <button data-tab="wires" class="manual-tab px-2 py-1 rounded-lg font-mono-tech text-[10px] sm:text-[11px] font-extrabold bg-[#0b3d91] text-white border border-[#233140] cursor-pointer transition">
+                                    1. Cables
+                                </button>
+                                <button data-tab="symbols" class="manual-tab px-2 py-1 rounded-lg font-mono-tech text-[10px] sm:text-[11px] font-bold bg-white text-[#233140] border border-[#94a3b8] hover:bg-slate-100 cursor-pointer transition">
+                                    2. Símbolos
+                                </button>
+                                <button data-tab="button" class="manual-tab px-2 py-1 rounded-lg font-mono-tech text-[10px] sm:text-[11px] font-bold bg-white text-[#233140] border border-[#94a3b8] hover:bg-slate-100 cursor-pointer transition">
+                                    3. Botón
+                                </button>
+                                <button data-tab="switches" class="manual-tab px-2 py-1 rounded-lg font-mono-tech text-[10px] sm:text-[11px] font-bold bg-white text-[#233140] border border-[#94a3b8] hover:bg-slate-100 cursor-pointer transition">
+                                    4. Interruptores
+                                </button>
+                                <button data-tab="blackout" class="manual-tab px-2 py-1 rounded-lg font-mono-tech text-[10px] sm:text-[11px] font-bold bg-amber-200 text-amber-950 border border-amber-500 hover:bg-amber-300 cursor-pointer transition">
+                                    5. Apagón
+                                </button>
+                                <button data-tab="tasks" class="manual-tab px-2 py-1 rounded-lg font-mono-tech text-[10px] sm:text-[11px] font-bold bg-emerald-200 text-emerald-950 border border-emerald-500 hover:bg-emerald-300 cursor-pointer transition">
+                                    6. Tareas EEI
+                                </button>
+                            </div>
+
+                            <div class="hidden sm:flex items-center gap-1.5 shrink-0">
+                                <span class="w-6 h-6 rounded-md bg-[#7c98b3] border-2 border-[#233140] flex items-center justify-center text-[11px] text-white" title="Índice de Manuales">☰</span>
+                                <span class="w-6 h-6 rounded-md bg-[#b5838d] border-2 border-[#233140] flex items-center justify-center text-[11px] text-white" title="Modo Guía">🪄</span>
+                            </div>
+                        </div>
+
+                        <div class="p-3 sm:p-4 overflow-y-auto flex-1 text-xs sm:text-[13px] leading-snug space-y-3 bg-[#f8fbff]">
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg px-3 py-1.5 flex flex-wrap items-center justify-between gap-2 text-[11px] text-blue-950">
+                                <span><strong>📡 Pide al Astronauta:</strong> 1) Último dígito del Serial (<span class="font-mono-tech font-bold">ISS-###</span>) y 2) Luces LED (<span class="font-mono-tech font-bold">FRK / NSA / ORB</span>).</span>
+                            </div>
+
+                            <div id="tab-wires" class="manual-content space-y-2.5">
+                                <div class="flex items-center justify-between border-b border-slate-300 pb-1">
+                                    <h2 class="font-extrabold text-sm sm:text-base text-[#0b3d91]">🔌 1. CABLES DE ENERGÍA (4 a 6 cables)</h2>
+                                    <span class="font-mono-tech text-[10px] bg-slate-200 px-2 py-0.5 rounded font-bold">CORTAR SOLO 1</span>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                    <div class="bg-white border-2 border-slate-300 rounded-xl p-2.5">
+                                        <p class="font-mono-tech font-extrabold text-amber-700 text-xs mb-1">▶ SI HAY 4 CABLES:</p>
+                                        <ol class="list-decimal list-inside space-y-1 text-[11px] text-slate-800">
+                                            <li><strong>&gt;1 rojo</strong> y serial <strong>IMPAR</strong> → corta el <strong>último rojo</strong>.</li>
+                                            <li><strong>Último amarillo</strong> y <strong>0 rojos</strong> → corta el <strong>1º</strong>.</li>
+                                            <li><strong>Exactamente 1 azul</strong> → corta el <strong>1º</strong>.</li>
+                                            <li><strong>&gt;1 amarillo</strong> → corta el <strong>último (4º)</strong>.</li>
+                                            <li>Otro caso → corta el <strong>2º cable</strong>.</li>
+                                        </ol>
+                                    </div>
+                                    <div class="bg-white border-2 border-slate-300 rounded-xl p-2.5">
+                                        <p class="font-mono-tech font-extrabold text-blue-700 text-xs mb-1">▶ SI HAY 5 CABLES:</p>
+                                        <ol class="list-decimal list-inside space-y-1 text-[11px] text-slate-800">
+                                            <li><strong>Último negro</strong> y serial <strong>IMPAR</strong> → corta el <strong>4º</strong>.</li>
+                                            <li><strong>1 rojo</strong> y <strong>&gt;1 amarillo</strong> → corta el <strong>1º</strong>.</li>
+                                            <li><strong>0 cables negros</strong> → corta el <strong>2º</strong>.</li>
+                                            <li>Otro caso → corta el <strong>1º cable</strong>.</li>
+                                        </ol>
+                                    </div>
+                                    <div class="bg-white border-2 border-slate-300 rounded-xl p-2.5">
+                                        <p class="font-mono-tech font-extrabold text-emerald-700 text-xs mb-1">▶ SI HAY 6 CABLES:</p>
+                                        <ol class="list-decimal list-inside space-y-1 text-[11px] text-slate-800">
+                                            <li><strong>0 amarillos</strong> y serial <strong>IMPAR</strong> → corta el <strong>3º</strong>.</li>
+                                            <li><strong>1 amarillo</strong> y <strong>&gt;1 blanco</strong> → corta el <strong>4º</strong>.</li>
+                                            <li><strong>0 cables rojos</strong> → corta el <strong>último (6º)</strong>.</li>
+                                            <li>Otro caso → corta el <strong>4º cable</strong>.</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="tab-symbols" class="manual-content hidden space-y-2.5">
+                                <div class="flex items-center justify-between border-b border-slate-300 pb-1">
+                                    <h2 class="font-extrabold text-sm sm:text-base text-[#0b3d91]">✨ 2. TECLADO DE SÍMBOLOS</h2>
+                                    <span class="font-mono-tech text-[10px] bg-slate-200 px-2 py-0.5 rounded font-bold">ORDEN DE ARRIBA A ABAJO</span>
+                                </div>
+                                <p class="text-xs text-slate-700">Encuentra la <strong>única columna</strong> que tenga los 4 símbolos del módulo y díctaselos <strong>de arriba hacia abajo</strong>:</p>
+                                <div class="grid grid-cols-4 gap-2 text-center font-mono-tech text-[11px]">
+                                    <div class="bg-white border-2 border-blue-300 rounded-xl p-2">
+                                        <div class="font-extrabold text-blue-800 border-b pb-1 mb-1">ALFA</div>
+                                        <div class="space-y-1">
+                                            <div class="bg-slate-100 rounded py-0.5">☄️ Cometa</div>
+                                            <div class="bg-slate-100 rounded py-0.5">🪐 Saturno</div>
+                                            <div class="bg-slate-100 rounded py-0.5">🌙 Luna</div>
+                                            <div class="bg-slate-100 rounded py-0.5">☀️ Sol</div>
+                                            <div class="bg-slate-100 rounded py-0.5">🛰️ Satélite</div>
+                                            <div class="bg-slate-100 rounded py-0.5">🌌 Galaxia</div>
+                                        </div>
+                                    </div>
+                                    <div class="bg-white border-2 border-emerald-300 rounded-xl p-2">
+                                        <div class="font-extrabold text-emerald-800 border-b pb-1 mb-1">BETA</div>
+                                        <div class="space-y-1">
+                                            <div class="bg-slate-100 rounded py-0.5">🌍 Tierra</div>
+                                            <div class="bg-slate-100 rounded py-0.5">☄️ Cometa</div>
+                                            <div class="bg-slate-100 rounded py-0.5">🌌 Galaxia</div>
+                                            <div class="bg-slate-100 rounded py-0.5">🔭 Telescopio</div>
+                                            <div class="bg-slate-100 rounded py-0.5">⭐ Estrella</div>
+                                            <div class="bg-slate-100 rounded py-0.5">🌙 Luna</div>
+                                        </div>
+                                    </div>
+                                    <div class="bg-white border-2 border-amber-300 rounded-xl p-2">
+                                        <div class="font-extrabold text-amber-800 border-b pb-1 mb-1">GAMMA</div>
+                                        <div class="space-y-1">
+                                            <div class="bg-slate-100 rounded py-0.5">🚀 Cohete</div>
+                                            <div class="bg-slate-100 rounded py-0.5">🔭 Telescopio</div>
+                                            <div class="bg-slate-100 rounded py-0.5">🪐 Saturno</div>
+                                            <div class="bg-slate-100 rounded py-0.5">⚡ Rayo</div>
+                                            <div class="bg-slate-100 rounded py-0.5">🛰️ Satélite</div>
+                                            <div class="bg-slate-100 rounded py-0.5">⭐ Estrella</div>
+                                        </div>
+                                    </div>
+                                    <div class="bg-white border-2 border-purple-300 rounded-xl p-2">
+                                        <div class="font-extrabold text-purple-800 border-b pb-1 mb-1">DELTA</div>
+                                        <div class="space-y-1">
+                                            <div class="bg-slate-100 rounded py-0.5">☀️ Sol</div>
+                                            <div class="bg-slate-100 rounded py-0.5">🌍 Tierra</div>
+                                            <div class="bg-slate-100 rounded py-0.5">🚀 Cohete</div>
+                                            <div class="bg-slate-100 rounded py-0.5">☄️ Cometa</div>
+                                            <div class="bg-slate-100 rounded py-0.5">⚡ Rayo</div>
+                                            <div class="bg-slate-100 rounded py-0.5">🌌 Galaxia</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="tab-button" class="manual-content hidden space-y-2.5">
+                                <div class="flex items-center justify-between border-b border-slate-300 pb-1">
+                                    <h2 class="font-extrabold text-sm sm:text-base text-[#0b3d91]">🔴 3. BOTÓN DE IGNICIÓN</h2>
+                                    <span class="font-mono-tech text-[10px] bg-slate-200 px-2 py-0.5 rounded font-bold">EVALUAR EN ORDEN 1-5</span>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                    <div class="bg-white border-2 border-slate-300 rounded-xl p-2.5 space-y-1 text-xs">
+                                        <p><strong>1.</strong> Botón <span class="text-blue-700 font-bold">AZUL</span> + dice <strong>"ABORTAR"</strong> → <strong>MANTENER</strong>.</p>
+                                        <p><strong>2.</strong> Luz <span class="font-mono-tech bg-emerald-100 px-1 rounded font-bold">FRK</span> encendida + dice <strong>"DETONAR"</strong> → <strong>PULSAR Y SOLTAR YA</strong>.</p>
+                                        <p><strong>3.</strong> Botón <strong>BLANCO</strong> + luz <span class="font-mono-tech bg-emerald-100 px-1 rounded font-bold">NSA</span> encendida → <strong>MANTENER</strong>.</p>
+                                        <p><strong>4.</strong> Botón <span class="text-red-600 font-bold">ROJO</span> + dice <strong>"MANTENER"</strong> → <strong>PULSAR Y SOLTAR YA</strong>.</p>
+                                        <p><strong>5.</strong> Cualquier otro caso → <strong>MANTENER</strong>.</p>
+                                    </div>
+                                    <div class="bg-blue-50 border-2 border-blue-300 rounded-xl p-2.5 space-y-1.5 text-xs">
+                                        <p class="font-extrabold text-blue-900">⏱️ SI DEBE MANTENERLO PRESIONADO:</p>
+                                        <p class="text-[11px]">Se encenderá una tira de luz lateral. Dile cuándo soltar según el color:</p>
+                                        <ul class="font-mono-tech text-xs space-y-1">
+                                            <li>🔵 <strong>Luz AZUL:</strong> Soltar con un <strong class="text-blue-700">4</strong> en el reloj.</li>
+                                            <li>🟡 <strong>Luz AMARILLA:</strong> Soltar con un <strong class="text-amber-700">5</strong> en el reloj.</li>
+                                            <li>🟢 <strong>Luz VERDE / Otra:</strong> Soltar con un <strong class="text-emerald-700">1</strong> en el reloj.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="tab-switches" class="manual-content hidden space-y-2">
+                                <div class="flex items-center justify-between border-b border-slate-300 pb-1">
+                                    <h2 class="font-extrabold text-sm sm:text-base text-[#0b3d91]">🎛️ 4. PANEL DE INTERRUPTORES</h2>
+                                    <span class="font-mono-tech text-[10px] bg-slate-200 px-2 py-0.5 rounded font-bold">LUEGO PULSAR APLICAR</span>
+                                </div>
+                                <table class="w-full text-left border-collapse font-mono-tech text-[11px] bg-white border border-slate-300">
+                                    <thead>
+                                        <tr class="bg-slate-200 text-slate-900">
+                                            <th class="p-1.5 border">Frecuencia</th>
+                                            <th class="p-1.5 border">Condición</th>
+                                            <th class="p-1.5 border text-center">SW1</th>
+                                            <th class="p-1.5 border text-center">SW2</th>
+                                            <th class="p-1.5 border text-center">SW3</th>
+                                            <th class="p-1.5 border text-center">SW4</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="p-1.5 border font-bold">142 MHz</td>
+                                            <td class="p-1.5 border">Serial PAR</td>
+                                            <td class="p-1.5 border text-center text-emerald-700 font-bold">ARRIBA</td>
+                                            <td class="p-1.5 border text-center text-slate-400">ABAJO</td>
+                                            <td class="p-1.5 border text-center text-emerald-700 font-bold">ARRIBA</td>
+                                            <td class="p-1.5 border text-center text-slate-400">ABAJO</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="p-1.5 border font-bold">142 MHz</td>
+                                            <td class="p-1.5 border">Serial IMPAR</td>
+                                            <td class="p-1.5 border text-center text-slate-400">ABAJO</td>
+                                            <td class="p-1.5 border text-center text-emerald-700 font-bold">ARRIBA</td>
+                                            <td class="p-1.5 border text-center text-emerald-700 font-bold">ARRIBA</td>
+                                            <td class="p-1.5 border text-center text-slate-400">ABAJO</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="p-1.5 border font-bold">256 MHz</td>
+                                            <td class="p-1.5 border">Luz ORB ON</td>
+                                            <td class="p-1.5 border text-center text-emerald-700 font-bold">ARRIBA</td>
+                                            <td class="p-1.5 border text-center text-emerald-700 font-bold">ARRIBA</td>
+                                            <td class="p-1.5 border text-center text-slate-400">ABAJO</td>
+                                            <td class="p-1.5 border text-center text-emerald-700 font-bold">ARRIBA</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="p-1.5 border font-bold">256 MHz</td>
+                                            <td class="p-1.5 border">Luz ORB OFF</td>
+                                            <td class="p-1.5 border text-center text-slate-400">ABAJO</td>
+                                            <td class="p-1.5 border text-center text-slate-400">ABAJO</td>
+                                            <td class="p-1.5 border text-center text-emerald-700 font-bold">ARRIBA</td>
+                                            <td class="p-1.5 border text-center text-emerald-700 font-bold">ARRIBA</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="p-1.5 border font-bold">512 MHz</td>
+                                            <td class="p-1.5 border">Cualquier caso</td>
+                                            <td class="p-1.5 border text-center text-emerald-700 font-bold">ARRIBA</td>
+                                            <td class="p-1.5 border text-center text-slate-400">ABAJO</td>
+                                            <td class="p-1.5 border text-center text-slate-400">ABAJO</td>
+                                            <td class="p-1.5 border text-center text-emerald-700 font-bold">ARRIBA</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div id="tab-blackout" class="manual-content hidden space-y-2.5">
+                                <div class="flex items-center justify-between border-b border-amber-400 pb-1">
+                                    <h2 class="font-extrabold text-sm sm:text-base text-amber-800">⚡ 5. PROTOCOLO DE APAGÓN (CAJA DE FUSIBLES)</h2>
+                                    <span class="font-mono-tech text-[10px] bg-amber-200 px-2 py-0.5 rounded font-bold text-amber-950">EMERGENCIA</span>
+                                </div>
+                                <div class="bg-amber-50 border-2 border-amber-300 rounded-xl p-3 space-y-1.5 text-xs text-slate-800">
+                                    <p>Si el Astronauta reporta que <strong>se fue la luz en la estación</strong>:</p>
+                                    <ol class="list-decimal list-inside space-y-1">
+                                        <li>Indícale que navegue hacia la <strong>Sala 3: Motores</strong> (usando su linterna).</li>
+                                        <li>Debe presionar el botón <strong>"ABRIR CAJA DE FUSIBLES"</strong>.</li>
+                                        <li>Dentro de la caja, debe unir cada cable izquierdo con el terminal del <strong>mismo color</strong> a la derecha (Rojo, Azul, Amarillo y Verde) para restaurar la energía.</li>
+                                    </ol>
+                                </div>
+                            </div>
+
+                            <div id="tab-tasks" class="manual-content hidden space-y-2">
+                                <div class="flex items-center justify-between border-b border-emerald-400 pb-1">
+                                    <h2 class="font-extrabold text-sm sm:text-base text-emerald-800">🛰️ 6. TAREAS SECUNDARIAS POR ZONA</h2>
+                                    <span class="font-mono-tech text-[10px] bg-emerald-200 px-2 py-0.5 rounded font-bold text-emerald-950">MANTENIMIENTO</span>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] text-slate-800">
+                                    <div class="bg-white border-2 border-indigo-300 rounded-xl p-2">
+                                        <p class="font-mono-tech font-extrabold text-indigo-800">🔭 1. PUENTE DE MANDO</p>
+                                        <p class="mt-1"><strong>Calibrar Telescopio:</strong> Localizar y pulsar la Estrella Brillante (⭐) oculta entre los asteroides y nebulosas.</p>
+                                    </div>
+                                    <div class="bg-white border-2 border-emerald-300 rounded-xl p-2">
+                                        <p class="font-mono-tech font-extrabold text-emerald-800">🥫 2. LABORATORIO</p>
+                                        <p class="mt-1"><strong>Ordenar Provisiones:</strong> Clasificar los Enlatados (🥫) a la izquierda y los Deshidratados (📦) a la derecha.</p>
+                                    </div>
+                                    <div class="bg-white border-2 border-cyan-300 rounded-xl p-2">
+                                        <p class="font-mono-tech font-extrabold text-cyan-800">📡 3. SALA DE MOTORES</p>
+                                        <p class="mt-1"><strong>Enviar Archivos:</strong> Pulsar "INICIAR ENVÍO" y esperar que la carga de telemetría a Houston llegue al 100%.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="nasaEventLog" class="bg-slate-100 border border-slate-300 rounded-lg px-2.5 py-1.5 font-mono-tech text-[10px] text-slate-600 max-h-14 overflow-y-auto">
+                                <div>> Enlace activo con Estación Espacial. Listo para guiar al astronauta.</div>
+                            </div>
+                        </div>
+
+                        <div class="absolute bottom-2 right-2.5 w-6 h-6 rounded-md bg-white/90 border-2 border-[#233140] flex items-center justify-center text-[11px] text-[#233140] pointer-events-none shadow-sm">
+                            ⚙️
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-full bg-[#b4c6d8] cartoon-outline rounded-b-[22px] rounded-t-[6px] px-4 sm:px-8 pt-2.5 pb-3 shadow-lg -mt-[2px]">
+                    <div class="grid grid-cols-10 gap-1.5 sm:gap-2">
+                        <div class="h-3.5 sm:h-4 bg-[#eef4fa] border-2 border-[#233140] rounded"></div>
+                        <div class="h-3.5 sm:h-4 bg-[#eef4fa] border-2 border-[#233140] rounded"></div>
+                        <div class="h-3.5 sm:h-4 bg-[#eef4fa] border-2 border-[#233140] rounded"></div>
+                        <div class="h-3.5 sm:h-4 bg-[#eef4fa] border-2 border-[#233140] rounded"></div>
+                        <div class="h-3.5 sm:h-4 bg-[#eef4fa] border-2 border-[#233140] rounded"></div>
+                        <div class="h-3.5 sm:h-4 bg-[#eef4fa] border-2 border-[#233140] rounded"></div>
+                        <div class="h-3.5 sm:h-4 bg-[#eef4fa] border-2 border-[#233140] rounded"></div>
+                        <div class="h-3.5 sm:h-4 bg-[#eef4fa] border-2 border-[#233140] rounded"></div>
+                        <div class="h-3.5 sm:h-4 bg-[#eef4fa] border-2 border-[#233140] rounded"></div>
+                        <div class="h-3.5 sm:h-4 bg-[#eef4fa] border-2 border-[#233140] rounded"></div>
+                    </div>
+                    <div class="grid grid-cols-10 gap-1.5 sm:gap-2 mt-1.5">
+                        <div class="h-3.5 sm:h-4 bg-[#eef4fa] border-2 border-[#233140] rounded"></div>
+                        <div class="h-3.5 sm:h-4 bg-[#eef4fa] border-2 border-[#233140] rounded"></div>
+                        <div class="col-span-5 h-3.5 sm:h-4 bg-[#eef4fa] border-2 border-[#233140] rounded"></div>
+                        <div class="h-3.5 sm:h-4 bg-[#eef4fa] border-2 border-[#233140] rounded"></div>
+                        <div class="col-span-2 h-3.5 sm:h-4 bg-[#eef4fa] border-2 border-[#233140] rounded"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full h-14 sm:h-20 bg-gradient-to-b from-[#f38e1d] to-[#dc7609] border-t-[4px] border-[#233140] -mt-10 sm:-mt-14 z-0"></div>
+    </div>
+
+    <div id="stationView" class="hidden min-h-screen flex flex-col justify-between bg-[#5a6b7c] relative overflow-hidden select-none">
+
+        <div id="blackoutMask" class="hidden fixed inset-0 z-20"></div>
+
+        <header class="bg-[#233140] border-b-[4px] border-[#141d26] px-3 sm:px-5 py-2 flex flex-wrap items-center justify-between gap-2 z-30 shadow-lg">
+            <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+                <div class="bg-[#344659] border-2 border-[#647b94] px-3 py-1 rounded-xl">
+                    <span class="text-[9px] font-mono-tech text-cyan-200 block leading-none font-bold">SERIAL EEI</span>
+                    <span id="stationSerialDisplay" class="font-mono-tech text-sm sm:text-base font-extrabold text-amber-300 tracking-wider">ISS-000X</span>
+                </div>
+
+                <div class="flex items-center gap-1.5 bg-[#344659] border-2 border-[#647b94] px-2.5 py-1.5 rounded-xl" id="stationIndicatorsBox">
+                </div>
+            </div>
+
+            <nav class="flex items-center gap-1.5 sm:gap-2">
+                <button data-room="0" class="room-nav-btn py-1.5 px-2.5 sm:px-3 rounded-xl font-mono-tech text-[11px] sm:text-xs font-extrabold border-2 border-[#233140] bg-cyan-400 text-[#233140] flex items-center gap-1 cursor-pointer transition shadow">
+                    <span>🛸</span> <span class="hidden md:inline">1. PUENTE</span>
+                    <span id="roomBadge0" class="px-1.5 rounded-full text-[10px] bg-[#233140] text-amber-300">0</span>
+                </button>
+                <button data-room="1" class="room-nav-btn py-1.5 px-2.5 sm:px-3 rounded-xl font-mono-tech text-[11px] sm:text-xs font-bold border-2 border-[#233140] bg-[#4a5d70] text-slate-200 hover:bg-[#5b7187] flex items-center gap-1 cursor-pointer transition">
+                    <span>🔬</span> <span class="hidden md:inline">2. LAB</span>
+                    <span id="roomBadge1" class="px-1.5 rounded-full text-[10px] bg-[#233140] text-amber-300">0</span>
+                </button>
+                <button data-room="2" class="room-nav-btn py-1.5 px-2.5 sm:px-3 rounded-xl font-mono-tech text-[11px] sm:text-xs font-bold border-2 border-[#233140] bg-[#4a5d70] text-slate-200 hover:bg-[#5b7187] flex items-center gap-1 cursor-pointer transition relative">
+                    <span>⚙️</span> <span class="hidden md:inline">3. MOTORES</span>
+                    <span id="roomBadge2" class="px-1.5 rounded-full text-[10px] bg-[#233140] text-amber-300">0</span>
+                    <span id="fuseAlertDot" class="hidden absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-amber-400 animate-ping"></span>
+                </button>
+            </nav>
+
+            <div class="flex items-center gap-2 sm:gap-2.5">
+                <div class="flex items-center gap-1 bg-[#344659] border-2 border-[#647b94] px-2 py-1 rounded-xl" id="stationStrikesBox">
+                    <span class="w-5 h-5 rounded-full bg-[#eef4fa] border-2 border-[#233140] flex items-center justify-center text-[10px] font-extrabold text-transparent">✕</span>
+                    <span class="w-5 h-5 rounded-full bg-[#eef4fa] border-2 border-[#233140] flex items-center justify-center text-[10px] font-extrabold text-transparent">✕</span>
+                    <span class="w-5 h-5 rounded-full bg-[#eef4fa] border-2 border-[#233140] flex items-center justify-center text-[10px] font-extrabold text-transparent">✕</span>
+                </div>
+
+                <div class="rainbow-timer-bezel !p-[2.5px] !rounded-xl">
+                    <div class="bg-[#233140] px-2.5 py-0.5 rounded-[9px] text-center">
+                        <span id="stationTimerDisplay" class="font-mono-tech text-base sm:text-lg font-extrabold text-emerald-400">05:00</span>
+                    </div>
+                </div>
+
+                <button id="stationExitBtn" class="px-2.5 py-1.5 bg-slate-700 hover:bg-slate-600 border-2 border-[#141d26] rounded-xl text-xs font-mono-tech font-bold text-white cursor-pointer z-30">
+                    Salir
+                </button>
+            </div>
+        </header>
+
+        <div id="stationBlackoutBanner" class="hidden bg-amber-400 text-[#233140] border-b-2 border-[#233140] font-mono-tech text-xs sm:text-sm font-extrabold py-1 px-4 text-center z-30 animate-pulse">
+            ⚡ ¡FALLO ELÉCTRICO! VE A LA "SALA 3: MOTORES" Y ABRE LA CAJA DE FUSIBLES ⚡
+        </div>
+
+        <main class="flex-1 flex flex-col justify-between p-2 sm:p-3.5 max-w-6xl w-full mx-auto relative">
+
+            <div id="stationRoomScene" class="station-scene-shell flex-1 rounded-[26px] p-2.5 sm:p-4 flex flex-col justify-between relative overflow-hidden">
+
+                <svg id="decor-room-0" viewBox="0 0 1000 620" class="absolute inset-0 w-full h-full pointer-events-none" preserveAspectRatio="none">
+                    <rect x="0" y="0" width="1000" height="620" fill="#899bae"/>
+                    <path d="M 140 0 L 860 0 L 800 95 L 200 95 Z" fill="#738598" stroke="#233140" stroke-width="4"/>
+                    <ellipse cx="500" cy="18" rx="135" ry="42" fill="#1e293b" stroke="#233140" stroke-width="5"/>
+                    <circle cx="460" cy="15" r="2" fill="#fff"/><circle cx="535" cy="22" r="2" fill="#fff"/>
+                    <path d="M 210 115 L 470 115 L 470 165" fill="none" stroke="#b8c7d6" stroke-width="22" stroke-linecap="round"/>
+                    <path d="M 210 115 L 470 115 L 470 165" fill="none" stroke="#233140" stroke-width="4"/>
+                    <circle cx="335" cy="82" r="20" fill="#f8fafc" stroke="#233140" stroke-width="4"/>
+                    <line x1="335" y1="82" x2="345" y2="70" stroke="#ef4444" stroke-width="3"/>
+                    <circle cx="395" cy="82" r="20" fill="#f8fafc" stroke="#233140" stroke-width="4"/>
+                    <line x1="395" y1="82" x2="385" y2="71" stroke="#ef4444" stroke-width="3"/>
+                    <rect x="515" y="65" width="175" height="90" rx="8" fill="#9fb0c1" stroke="#233140" stroke-width="4"/>
+                    <line x1="602" y1="65" x2="602" y2="155" stroke="#233140" stroke-width="4"/>
+                    <rect x="530" y="80" width="10" height="32" rx="3" fill="#22c55e" stroke="#233140" stroke-width="2"/>
+                    <rect x="546" y="80" width="10" height="32" rx="3" fill="#ef4444" stroke="#233140" stroke-width="2"/>
+                    <rect x="562" y="80" width="10" height="32" rx="3" fill="#38bdf8" stroke="#233140" stroke-width="2"/>
+                    <rect x="578" y="80" width="10" height="32" rx="3" fill="#facc15" stroke="#233140" stroke-width="2"/>
+                    <rect x="58" y="185" width="95" height="340" rx="18" fill="#637486" stroke="#233140" stroke-width="4"/>
+                    <rect x="85" y="152" width="42" height="18" rx="6" fill="#4ade80" stroke="#233140" stroke-width="3"/>
+                    <circle cx="18" cy="260" r="26" fill="#f1f5f9" stroke="#233140" stroke-width="4"/>
+                    <circle cx="22" cy="260" r="16" fill="#1e293b" stroke="#233140" stroke-width="3"/>
+                    <rect x="0" y="290" width="38" height="95" rx="14" fill="#f1f5f9" stroke="#233140" stroke-width="4"/>
+                    <path d="M 168 415 A 42 48 0 0 1 252 415 L 252 455 L 168 455 Z" fill="#bbf7d0" fill-opacity="0.55" stroke="#233140" stroke-width="4"/>
+                    <rect x="164" y="445" width="92" height="28" rx="10" fill="#cbd5e1" stroke="#233140" stroke-width="4"/>
+                    <path d="M 210 445 Q 205 405 190 395 M 210 435 Q 220 405 232 398 M 210 445 L 210 385" fill="none" stroke="#16a34a" stroke-width="4" stroke-linecap="round"/>
+                    <rect x="755" y="205" width="95" height="175" rx="10" fill="#94a3b8" stroke="#233140" stroke-width="4"/>
+                    <rect x="768" y="220" width="68" height="58" rx="6" fill="#1e293b" stroke="#233140" stroke-width="3"/>
+                    <circle cx="802" cy="249" r="22" fill="none" stroke="#4ade80" stroke-width="2"/>
+                    <rect x="768" y="295" width="68" height="58" rx="6" fill="#1e293b" stroke="#233140" stroke-width="3"/>
+                    <circle cx="802" cy="324" r="22" fill="none" stroke="#4ade80" stroke-width="2"/>
+                    <circle cx="955" cy="295" r="95" fill="#0f172a" stroke="#64748b" stroke-width="14"/>
+                    <circle cx="955" cy="295" r="95" fill="none" stroke="#233140" stroke-width="4"/>
+                    <circle cx="975" cy="335" r="52" fill="#38bdf8"/>
+                    <path d="M 945 315 Q 965 305 980 325 Q 970 350 945 340 Z" fill="#4ade80"/>
+                    <circle cx="932" cy="245" r="18" fill="#cbd5e1"/>
+                    <rect x="0" y="510" width="1000" height="110" fill="#76889b" stroke="#233140" stroke-width="4"/>
+                    <rect x="490" y="485" width="155" height="110" rx="10" fill="#cbd5e1" stroke="#233140" stroke-width="4"/>
+                    <path d="M 515 535 L 515 552 A 12 12 0 0 0 539 552 L 539 535" fill="none" stroke="#ef4444" stroke-width="7"/>
+                </svg>
+
+                <svg id="decor-room-1" viewBox="0 0 1000 620" class="hidden absolute inset-0 w-full h-full pointer-events-none" preserveAspectRatio="none">
+                    <rect x="0" y="0" width="1000" height="620" fill="#9fb0c1"/>
+                    <path d="M 140 0 Q 25 310 140 620" fill="none" stroke="#64748b" stroke-width="16"/>
+                    <path d="M 140 0 Q 25 310 140 620" fill="none" stroke="#233140" stroke-width="4"/>
+                    <path d="M 860 0 Q 975 310 860 620" fill="none" stroke="#64748b" stroke-width="16"/>
+                    <path d="M 860 0 Q 975 310 860 620" fill="none" stroke="#233140" stroke-width="4"/>
+                    <rect x="305" y="15" width="250" height="82" rx="8" fill="#7c8d9e" stroke="#233140" stroke-width="4"/>
+                    <rect x="380" y="32" width="11" height="44" rx="4" fill="#4ade80" stroke="#233140" stroke-width="2.5"/>
+                    <rect x="398" y="32" width="11" height="44" rx="4" fill="#c084fc" stroke="#233140" stroke-width="2.5"/>
+                    <rect x="416" y="32" width="11" height="44" rx="4" fill="#38bdf8" stroke="#233140" stroke-width="2.5"/>
+                    <circle cx="645" cy="58" r="46" fill="#0f172a" stroke="#64748b" stroke-width="10"/>
+                    <circle cx="645" cy="58" r="46" fill="none" stroke="#233140" stroke-width="4"/>
+                    <path d="M 608 82 Q 645 64 682 82 A 40 40 0 0 1 608 82 Z" fill="#38bdf8"/>
+                    <line x1="622" y1="48" x2="668" y2="56" stroke="#e2e8f0" stroke-width="4"/>
+                    <rect x="624" y="36" width="8" height="24" fill="#3b82f6"/>
+                    <rect x="656" y="42" width="8" height="24" fill="#3b82f6"/>
+                    <path d="M 195 75 L 235 45" stroke="#cbd5e1" stroke-width="12" stroke-linecap="round"/>
+                    <path d="M 195 75 L 235 45" stroke="#233140" stroke-width="3"/>
+                    <rect x="865" y="295" width="75" height="95" rx="4" fill="#f8fafc" stroke="#233140" stroke-width="3"/>
+                    <rect x="875" y="305" width="24" height="22" fill="#facc15" stroke="#233140" stroke-width="2"/>
+                    <rect x="905" y="305" width="24" height="22" fill="#38bdf8" stroke="#233140" stroke-width="2"/>
+                    <rect x="875" y="334" width="24" height="22" fill="#f87171" stroke="#233140" stroke-width="2"/>
+                    <rect x="905" y="334" width="24" height="22" fill="#4ade80" stroke="#233140" stroke-width="2"/>
+                    <rect x="28" y="315" width="125" height="275" rx="10" fill="#7c8d9e" stroke="#233140" stroke-width="4"/>
+                    <rect x="52" y="340" width="14" height="48" rx="5" fill="#4ade80" stroke="#233140" stroke-width="3"/>
+                    <rect x="74" y="340" width="14" height="48" rx="5" fill="#38bdf8" stroke="#233140" stroke-width="3"/>
+                    <rect x="96" y="340" width="14" height="48" rx="5" fill="#e879f9" stroke="#233140" stroke-width="3"/>
+                    <rect x="118" y="340" width="14" height="48" rx="5" fill="#fb923c" stroke="#233140" stroke-width="3"/>
+                </svg>
+
+                <svg id="decor-room-2" viewBox="0 0 1000 620" class="hidden absolute inset-0 w-full h-full pointer-events-none" preserveAspectRatio="none">
+                    <rect x="0" y="0" width="1000" height="620" fill="#6b7c8d"/>
+                    <rect x="180" y="0" width="640" height="80" fill="#526273" stroke="#233140" stroke-width="4"/>
+                    <circle cx="715" cy="40" r="34" fill="#334155" stroke="#233140" stroke-width="4"/>
+                    <path d="M 275 105 A 16 18 0 0 1 307 105 Z" fill="#ef4444" stroke="#233140" stroke-width="3.5"/>
+                    <path d="M 693 105 A 16 18 0 0 1 725 105 Z" fill="#ef4444" stroke="#233140" stroke-width="3.5"/>
+                    <path d="M 145 85 L 145 190 L 95 190 L 95 310" fill="none" stroke="#38bdf8" stroke-width="20" stroke-linejoin="round"/>
+                    <path d="M 145 85 L 145 190 L 95 190 L 95 310" fill="none" stroke="#233140" stroke-width="4" stroke-linejoin="round"/>
+                    <rect x="108" y="375" width="32" height="75" rx="10" fill="#4ade80" stroke="#233140" stroke-width="4"/>
+                    <path d="M 965 85 L 825 155" fill="none" stroke="#4ade80" stroke-width="22" stroke-linecap="round"/>
+                    <path d="M 965 85 L 825 155" fill="none" stroke="#233140" stroke-width="4"/>
+                    <rect x="855" y="375" width="32" height="75" rx="10" fill="#38bdf8" stroke="#233140" stroke-width="4"/>
+                    <ellipse cx="18" cy="315" rx="48" ry="68" fill="#06b6d4" stroke="#233140" stroke-width="5"/>
+                    <ellipse cx="982" cy="315" rx="48" ry="68" fill="#38bdf8" stroke="#233140" stroke-width="5"/>
+                    <rect x="330" y="505" width="340" height="95" rx="8" fill="#9fb0c1" stroke="#233140" stroke-width="4"/>
+                    <rect x="595" y="522" width="36" height="18" rx="4" fill="#ef4444" stroke="#233140" stroke-width="2.5"/>
+                </svg>
+
+                <div class="relative z-10 flex flex-wrap items-center justify-between gap-2 bg-[#233140]/92 text-white px-3.5 py-1.5 rounded-2xl border-2 border-[#475d75] shadow-md mb-2">
+                    <div class="flex items-center gap-2">
+                        <span id="roomSubtitle" class="px-2 py-0.5 rounded bg-cyan-500/20 border border-cyan-400/50 text-[10px] font-mono-tech font-bold text-cyan-300">SALA 01</span>
+                        <h2 id="roomTitle" class="text-sm sm:text-base font-extrabold text-white">Puente de Mando y Navegación</h2>
+                        <span id="roomDesc" class="hidden lg:inline text-xs text-slate-300">— Ventanales orbitales hacia la Tierra</span>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <button id="openRoomTaskBtn" class="hidden px-3 py-1 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-[#233140] border-2 border-[#233140] font-mono-tech text-xs font-extrabold flex items-center gap-1.5 cursor-pointer shadow transition animate-pulse">
+                            <span id="roomTaskIcon">🔭</span> <span id="roomTaskLabel">CALIBRAR TELESCOPIO</span>
+                        </button>
+
+                        <button id="openFuseBoxBtn" class="hidden px-3 py-1 rounded-xl bg-amber-400 hover:bg-amber-300 text-[#233140] border-2 border-[#233140] font-mono-tech text-xs font-extrabold flex items-center gap-1.5 cursor-pointer shadow transition">
+                            <span>⚡</span> ABRIR CAJA DE FUSIBLES
+                        </button>
+                    </div>
+                </div>
+
+                <div id="roomModulesGrid" class="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 w-full max-w-[820px] mx-auto my-auto">
+                </div>
+
+                <div class="relative z-10 flex items-center justify-between mt-2 pt-2 border-t-2 border-[#233140]/40">
+                    <button id="prevRoomBtn" class="px-3.5 py-1.5 rounded-xl bg-[#233140] hover:bg-[#334659] border-2 border-[#141d26] font-mono-tech text-xs font-extrabold text-white flex items-center gap-1.5 cursor-pointer shadow">
+                        ◀ SALA ANTERIOR
+                    </button>
+                    <span id="totalProgressText" class="px-3 py-1 rounded-full bg-[#233140]/90 border border-[#475d75] font-mono-tech text-xs font-bold text-amber-300">
+                        Módulos desactivados: 0 / 5
+                    </span>
+                    <button id="nextRoomBtn" class="px-3.5 py-1.5 rounded-xl bg-[#233140] hover:bg-[#334659] border-2 border-[#141d26] font-mono-tech text-xs font-extrabold text-white flex items-center gap-1.5 cursor-pointer shadow">
+                        SIGUIENTE SALA ▶
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="fuseBoxModal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-sm z-40 flex items-center justify-center p-4">
+        <div class="w-full max-w-lg bg-slate-900 border-2 border-amber-400/80 rounded-3xl p-6 shadow-2xl relative">
+            <div class="flex items-center justify-between border-b border-slate-700 pb-3 mb-4">
+                <div>
+                    <span class="text-[10px] font-mono-tech uppercase text-amber-400 font-bold">SALA 03 • DISTRIBUCIÓN ELÉCTRICA</span>
+                    <h3 class="text-xl font-bold text-white">⚡ Caja de Fusibles Principales</h3>
+                </div>
+                <button id="closeFuseBoxBtn" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold cursor-pointer">✕</button>
+            </div>
+
+            <p class="text-xs text-slate-300 mb-4">
+                Toca un terminal de la <strong>izquierda</strong> y luego su terminal del <strong>mismo color</strong> a la derecha para restaurar la energía.
+            </p>
+
+            <div id="fuseBoard" class="relative bg-slate-950 border-2 border-slate-800 rounded-2xl h-72 flex justify-between items-center py-4">
+                <svg id="fuseWiresSvg" class="absolute inset-0 w-full h-full pointer-events-none"></svg>
+                <div id="fuseLeftCol" class="flex flex-col justify-between h-full z-10"></div>
+                <div id="fuseRightCol" class="flex flex-col justify-between h-full z-10"></div>
+            </div>
+
+            <p id="fuseStatusMsg" class="mt-4 text-center font-mono-tech text-xs text-amber-300">
+                Estado: Sistema sin energía. Conecta los 4 cables.
+            </p>
+        </div>
+    </div>
+
+    <div id="roomTaskModal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-sm z-40 flex items-center justify-center p-4">
+        <div id="roomTaskModalBox" class="w-full max-w-lg bg-slate-900 border-2 border-indigo-500/70 rounded-3xl p-6 shadow-2xl relative">
+            <div class="flex items-center justify-between border-b border-slate-700 pb-3 mb-4">
+                <div>
+                    <span id="taskModalZoneTag" class="text-[10px] font-mono-tech uppercase text-indigo-400 font-bold">MANTENIMIENTO DE ZONA</span>
+                    <h3 id="taskModalTitle" class="text-xl font-bold text-white">Tarea Secundaria</h3>
+                </div>
+                <button id="closeRoomTaskBtn" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold cursor-pointer">✕</button>
+            </div>
+
+            <div id="taskModalBody" class="space-y-4">
+            </div>
+        </div>
+    </div>
+
+    <div id="endGameModal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="w-full max-w-md bg-slate-900 border-2 border-slate-700 rounded-3xl p-7 text-center shadow-2xl">
+            <div id="endIcon" class="text-6xl mb-3">🏆</div>
+            <h2 id="endTitle" class="text-3xl font-extrabold text-white mb-2">¡MISIÓN CUMPLIDA!</h2>
+            <p id="endSubtitle" class="text-sm text-slate-300 mb-6">
+                La Estación Espacial Internacional está estabilizada y fuera de peligro.
+            </p>
+
+            <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 mb-6 font-mono-tech text-xs space-y-2">
+                <div class="flex justify-between">
+                    <span class="text-slate-400">Código de Misión:</span>
+                    <span id="endSeed" class="text-cyan-300 font-bold">APOLO-13</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-400">Tiempo Restante:</span>
+                    <span id="endTime" class="text-emerald-400 font-bold">01:24</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-400">Fallos Cometidos:</span>
+                    <span id="endStrikes" class="text-amber-300 font-bold">1 / 3</span>
+                </div>
+            </div>
+
+            <button id="backToLobbyBtn" class="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold font-mono-tech tracking-wider cursor-pointer transition">
+                VOLVER AL CENTRO DE MANDO
+            </button>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * =====================================================================
+         * ÓRBITA CRÍTICA - MOTOR DEL JUEGO COOPERATIVO ASIMÉTRICO
+         * =====================================================================
+         */
+
+        // --- 1. GENERADOR PSEUDOALEATORIO DETERMINISTA (POR SEMILLA) ---
+        function createSeededRNG(seedStr) {
+            let h = 2166136261 >>> 0;
+            for (let i = 0; i < seedStr.length; i++) {
+                h ^= seedStr.charCodeAt(i);
+                h = Math.imul(h, 16777619);
+            }
+            return function () {
+                h += h << 13; h ^= h >>> 7;
+                h += h << 3;  h ^= h >>> 17;
+                h += h << 5;
+                return ((h >>> 0) / 4294967296);
+            };
+        }
+
+        // --- 2. SINTETIZADOR DE AUDIO WEB AUDIO API ---
+        let audioCtx = null;
+        function playTone(type, customFreq = null) {
+            try {
+                if (!audioCtx) {
+                    const AC = window.AudioContext || window.webkitAudioContext;
+                    if (AC) audioCtx = new AC();
+                }
+                if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+                if (!audioCtx) return;
+
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(customFreq || 600, now);
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+                    osc.start(now); osc.stop(now + 0.08);
+                } else if (type === 'snip') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(950, now);
+                    osc.frequency.exponentialRampToValueAtTime(220, now + 0.1);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+                    osc.start(now); osc.stop(now + 0.1);
+                } else if (type === 'solved') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.setValueAtTime(659.25, now + 0.09);
+                    osc.frequency.setValueAtTime(783.99, now + 0.18);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+                    osc.start(now); osc.stop(now + 0.32);
+                } else if (type === 'strike') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(140, now);
+                    osc.frequency.linearRampToValueAtTime(95, now + 0.35);
+                    gain.gain.setValueAtTime(0.25, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+                    osc.start(now); osc.stop(now + 0.35);
+                } else if (type === 'blackout') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(320, now);
+                    osc.frequency.exponentialRampToValueAtTime(55, now + 0.6);
+                    gain.gain.setValueAtTime(0.22, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+                    osc.start(now); osc.stop(now + 0.6);
+                } else if (type === 'poweron') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.4);
+                    gain.gain.setValueAtTime(0.16, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+                    osc.start(now); osc.stop(now + 0.4);
+                } else if (type === 'tick') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(880, now);
+                    gain.gain.setValueAtTime(0.04, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+                    osc.start(now); osc.stop(now + 0.03);
+                }
+            } catch (e) {}
+        }
+
+        // --- 3. ESTADO GLOBAL DE LA PARTIDA Y SINCRONIZACIÓN ---
+        const channel = ('BroadcastChannel' in window) ? new BroadcastChannel('orbita_critica_sync') : null;
+
+        let state = {
+            role: null, // 'nasa' | 'station'
+            seed: 'APOLO-13',
+            difficulty: 'normal',
+            status: 'lobby',
+            initialTime: 300,
+            timeLeft: 300,
+            strikes: 0,
+            maxStrikes: 3,
+            blackout: false,
+            nextBlackoutIn: 52,
+            currentRoom: 0,
+            serial: '',
+            lastDigitIsOdd: false,
+            serialHasVowel: false,
+            indicators: { FRK: false, NSA: false, ORB: false },
+            modules: [],
+            fusePuzzle: { left: [], right: [], connections: {}, selectedLeft: null },
+            roomTasks: {
+                0: { active: false, cooldown: 18 },
+                1: { active: false, cooldown: 28 },
+                2: { active: false, cooldown: 38 }
+            },
+            foodQueue: [],
+            uploadInterval: null,
+            uploadProgress: 0
+        };
+
+        let timerInterval = null;
+        let simonTimers = [];
+
+        function updateNasaShipPosition(progressRatio, explodedType = null) {
+            const shipContainer = document.getElementById('nasaShipContainer');
+            const shipSprite = document.getElementById('nasaShipSprite');
+            const expSprite = document.getElementById('nasaExplosionSprite');
+            if (!shipContainer || !shipSprite || !expSprite) return;
+
+            const t = Math.max(0, Math.min(1, progressRatio));
+            const p0 = { x: 55, y: 182 };
+            const p1 = { x: 305, y: 55 };
+            const p2 = { x: 575, y: 182 };
+
+            const oneMinusT = 1 - t;
+            const bx = oneMinusT * oneMinusT * p0.x + 2 * oneMinusT * t * p1.x + t * t * p2.x;
+            const by = oneMinusT * oneMinusT * p0.y + 2 * oneMinusT * t * p1.y + t * t * p2.y;
+
+            const dx = 2 * oneMinusT * (p1.x - p0.x) + 2 * t * (p2.x - p1.x);
+            const dy = 2 * oneMinusT * (p1.y - p0.y) + 2 * t * (p2.y - p1.y);
+            const angleDeg = (Math.atan2(dy, dx) * 180 / Math.PI) + 45;
+
+            const finalX = explodedType === 'earth' ? 605 : bx;
+            const finalY = explodedType === 'earth' ? 198 : by;
+
+            shipContainer.style.left = `${(finalX / 800) * 100}%`;
+            shipContainer.style.top = `${(finalY / 260) * 100}%`;
+            shipSprite.style.transform = `rotate(${angleDeg}deg)`;
+
+            if (explodedType) {
+                shipContainer.classList.remove('ship-flying');
+                shipContainer.classList.add('ship-exploded');
+                shipSprite.classList.add('hidden');
+                expSprite.classList.remove('hidden');
+            } else {
+                shipContainer.classList.add('ship-flying');
+                shipContainer.classList.remove('ship-exploded');
+                shipSprite.classList.remove('hidden');
+                expSprite.classList.add('hidden');
+            }
+        }
+
+        function broadcastSync(eventType = 'STATE_UPDATE') {
+            if (!channel) return;
+            channel.postMessage({
+                type: eventType,
+                seed: state.seed,
+                difficulty: state.difficulty,
+                payload: {
+                    status: state.status,
+                    initialTime: state.initialTime,
+                    timeLeft: state.timeLeft,
+                    strikes: state.strikes,
+                    blackout: state.blackout,
+                    solvedCount: state.modules.filter(m => m.solved).length,
+                    totalModules: state.modules.length
+                }
+            });
+        }
+
+        if (channel) {
+            channel.onmessage = (e) => {
+                const msg = e.data;
+                if (!msg || msg.seed !== state.seed) return;
+
+                if (msg.type === 'STATE_UPDATE' && state.status === 'playing') {
+                    if (state.role === 'nasa') {
+                        const prevStrikes = state.strikes;
+                        const prevBlackout = state.blackout;
+                        if (msg.payload.initialTime) state.initialTime = msg.payload.initialTime;
+                        state.timeLeft = msg.payload.timeLeft;
+                        state.strikes = msg.payload.strikes;
+                        state.blackout = msg.payload.blackout;
+
+                        if (state.strikes > prevStrikes) {
+                            addNasaLog(`⚠️ ¡ALERTA! El astronauta cometió un fallo (${state.strikes}/3).`);
+                            playTone('strike');
+                        }
+                        if (state.blackout && !prevBlackout) {
+                            addNasaLog(`⚡ ¡APAGÓN DETECTADO EN LA EEI!`);
+                            playTone('blackout');
+                        } else if (!state.blackout && prevBlackout) {
+                            addNasaLog(`✅ Energía restablecida en la EEI.`);
+                            playTone('poweron');
+                        }
+
+                        updateNasaHUD(msg.payload.solvedCount, msg.payload.totalModules);
+
+                        if (msg.payload.status === 'won') finishGame(true);
+                        if (msg.payload.status === 'lost') finishGame(false);
+                    }
+                } else if (msg.type === 'NASA_ADD_STRIKE' && state.role === 'station' && state.status === 'playing') {
+                    registerStrike('Fallo reportado por Control de Misión');
+                }
+            };
+        }
+
+        // --- 4. GENERACIÓN DETERMINISTA DE MÓDULOS Y ESCENARIO ---
+        function generateMissionScenario(seed, difficulty) {
+            const rng = createSeededRNG(seed + '_' + difficulty);
+            const pick = (arr) => arr[Math.floor(rng() * arr.length)];
+
+            const prefix = pick(['ISS', 'ORB', 'EEI', 'STR', 'NBL']);
+            const numPart = Math.floor(rng() * 900) + 100;
+            const letterPart = pick(['A', 'B', 'E', 'K', 'X', 'Z', 'M', 'U']);
+            state.serial = `${prefix}-${numPart}${letterPart}`;
+            state.lastDigitIsOdd = (numPart % 2) === 1;
+            state.serialHasVowel = /[AEIOU]/i.test(state.serial);
+
+            state.indicators = {
+                FRK: rng() > 0.5,
+                NSA: rng() > 0.5,
+                ORB: rng() > 0.5
+            };
+
+            let initialTime = 300;
+            let roomDistribution = [2, 2, 1];
+
+            if (difficulty === 'easy') {
+                initialTime = 330;
+                roomDistribution = [1, 1, 1];
+            } else if (difficulty === 'hard') {
+                initialTime = 270;
+                roomDistribution = [2, 2, 2];
+            }
+
+            state.initialTime = initialTime;
+            state.timeLeft = initialTime;
+            state.strikes = 0;
+            state.blackout = false;
+            state.nextBlackoutIn = difficulty === 'hard' ? 42 : (difficulty === 'normal' ? 55 : 70);
+            state.roomTasks = {
+                0: { active: true, cooldown: 25 },
+                1: { active: false, cooldown: 14 },
+                2: { active: false, cooldown: 22 }
+            };
+            state.modules = [];
+
+            const typesPool = ['wires', 'symbols', 'button', 'switches'];
+            let modId = 0;
+
+            for (let roomIdx = 0; roomIdx < 3; roomIdx++) {
+                const countInRoom = roomDistribution[roomIdx];
+                for (let j = 0; j < countInRoom; j++) {
+                    const mType = typesPool[modId % typesPool.length];
+                    const mod = buildModuleData(modId, roomIdx, mType, rng);
+                    state.modules.push(mod);
+                    modId++;
+                }
+            }
+        }
+
+        function buildModuleData(id, room, type, rng) {
+            const pick = (arr) => arr[Math.floor(rng() * arr.length)];
+
+            if (type === 'wires') {
+                const wireCount = pick([4, 5, 6]);
+                const colors = ['red', 'blue', 'yellow', 'white', 'black'];
+                const wires = [];
+                for (let i = 0; i < wireCount; i++) {
+                    wires.push({ color: pick(colors), cut: false });
+                }
+                const targetIndex = solveWiresRule(wires, state.lastDigitIsOdd);
+                return { id, room, type: 'wires', title: 'Cables de Energía', solved: false, wires, targetIndex };
+            }
+
+            if (type === 'symbols') {
+                const columns = [
+                    ['☄️', '🪐', '🌙', '☀️', '🛰️', '🌌'],
+                    ['🌍', '☄️', '🌌', '🔭', '⭐', '🌙'],
+                    ['🚀', '🔭', '🪐', '⚡', '🛰️', '⭐'],
+                    ['☀️', '🌍', '🚀', '☄️', '⚡', '🌌']
+                ];
+                const col = pick(columns);
+                const indices = [0, 1, 2, 3, 4, 5].sort(() => rng() - 0.5).slice(0, 4);
+                const correctOrder = [...indices].sort((a, b) => a - b).map(i => col[i]);
+                const displayButtons = [...correctOrder].sort(() => rng() - 0.5);
+                return {
+                    id, room, type: 'symbols', title: 'Constelaciones', solved: false,
+                    buttons: displayButtons,
+                    correctOrder,
+                    pressed: []
+                };
+            }
+
+            if (type === 'button') {
+                const colors = ['blue', 'white', 'red', 'yellow'];
+                const labels = ['ABORTAR', 'DETONAR', 'MANTENER', 'IGNICIÓN'];
+                const stripColors = ['blue', 'yellow', 'green'];
+                const btnColor = pick(colors);
+                const btnLabel = pick(labels);
+                const stripColor = pick(stripColors);
+
+                let mustHold = true;
+                if (btnColor === 'blue' && btnLabel === 'ABORTAR') mustHold = true;
+                else if (state.indicators.FRK && btnLabel === 'DETONAR') mustHold = false;
+                else if (btnColor === 'white' && state.indicators.NSA) mustHold = true;
+                else if (btnColor === 'red' && btnLabel === 'MANTENER') mustHold = false;
+                else mustHold = true;
+
+                const requiredDigit = stripColor === 'blue' ? '4' : (stripColor === 'yellow' ? '5' : '1');
+
+                return {
+                    id, room, type: 'button', title: 'Botón de Ignición', solved: false,
+                    btnColor, btnLabel, stripColor, mustHold, requiredDigit, isHolding: false
+                };
+            }
+
+            if (type === 'switches') {
+                const freq = pick(['142 MHz', '256 MHz', '512 MHz']);
+                let solution = [true, false, true, false];
+                if (freq === '142 MHz') {
+                    solution = !state.lastDigitIsOdd ? [true, false, true, false] : [false, true, true, false];
+                } else if (freq === '256 MHz') {
+                    solution = state.indicators.ORB ? [true, true, false, true] : [false, false, true, true];
+                } else {
+                    solution = [true, false, false, true];
+                }
+                return {
+                    id, room, type: 'switches', title: 'Interruptores Orbitales', solved: false,
+                    freq, solution, current: [false, false, false, false]
+                };
+            }
+        }
+
+        function solveWiresRule(wires, isOdd) {
+            const count = wires.length;
+            const reds = wires.map((w, i) => w.color === 'red' ? i : -1).filter(i => i !== -1);
+            const blues = wires.filter(w => w.color === 'blue').length;
+            const yellows = wires.filter(w => w.color === 'yellow').length;
+            const whites = wires.filter(w => w.color === 'white').length;
+            const blacks = wires.filter(w => w.color === 'black').length;
+
+            if (count === 4) {
+                if (reds.length > 1 && isOdd) return reds[reds.length - 1];
+                if (wires[3].color === 'yellow' && reds.length === 0) return 0;
+                if (blues === 1) return 0;
+                if (yellows > 1) return 3;
+                return 1;
+            }
+            if (count === 5) {
+                if (wires[4].color === 'black' && isOdd) return 3;
+                if (reds.length === 1 && yellows > 1) return 0;
+                if (blacks === 0) return 1;
+                return 0;
+            }
+            if (yellows === 0 && isOdd) return 2;
+            if (yellows === 1 && whites > 1) return 3;
+            if (reds.length === 0) return 5;
+            return 3;
+        }
+
+        // --- 5. CONTROL DE FLUJO Y TEMPORIZADOR ---
+        function formatTime(sec) {
+            const m = Math.floor(Math.max(0, sec) / 60);
+            const s = Math.max(0, sec) % 60;
+            return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        function startMission(role) {
+            const rawSeed = document.getElementById('missionSeedInput').value.trim().toUpperCase();
+            state.seed = rawSeed || 'APOLO-13';
+            state.role = role;
+            state.status = 'playing';
+            state.currentRoom = 0;
+
+            generateMissionScenario(state.seed, state.difficulty);
+
+            document.getElementById('lobbyScreen').classList.add('hidden');
+            document.getElementById('endGameModal').classList.add('hidden');
+
+            if (role === 'nasa') {
+                document.getElementById('nasaView').classList.remove('hidden');
+                document.getElementById('stationView').classList.add('hidden');
+                document.getElementById('nasaMissionCode').textContent = state.seed;
+                document.getElementById('nasaDiffLabel').textContent =
+                    state.difficulty === 'easy' ? 'FÁCIL' : (state.difficulty === 'normal' ? 'NORMAL' : 'DIFÍCIL');
+                document.getElementById('nasaTimerDisplay').textContent = formatTime(state.timeLeft);
+                updateNasaShipPosition(0, null);
+                updateNasaHUD(0, state.modules.length);
+            } else {
+                document.getElementById('stationView').classList.remove('hidden');
+                document.getElementById('nasaView').classList.add('hidden');
+                document.getElementById('stationTimerDisplay').textContent = formatTime(state.timeLeft);
+                renderStationHeader();
+                switchRoom(0);
+            }
+
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(gameTick, 1000);
+            broadcastSync('STATE_UPDATE');
+        }
+
+        function gameTick() {
+            if (state.status !== 'playing') return;
+
+            state.timeLeft--;
+            if (state.timeLeft <= 15 && state.timeLeft > 0) {
+                playTone('tick');
+            }
+
+            const formatted = formatTime(state.timeLeft);
+            const nasaTimer = document.getElementById('nasaTimerDisplay');
+            const stationTimer = document.getElementById('stationTimerDisplay');
+            nasaTimer.textContent = formatted;
+            stationTimer.textContent = formatted;
+
+            if (state.timeLeft <= 30) {
+                nasaTimer.classList.remove('text-[#34d399]');
+                nasaTimer.classList.add('text-red-500');
+                stationTimer.classList.replace('text-emerald-400', 'text-red-500');
+            } else {
+                nasaTimer.classList.add('text-[#34d399]');
+                nasaTimer.classList.remove('text-red-500');
+            }
+
+            if (state.role === 'nasa') {
+                const elapsedRatio = 1 - (state.timeLeft / state.initialTime);
+                updateNasaShipPosition(elapsedRatio, null);
+            }
+
+            if (state.role === 'station') {
+                if (!state.blackout) {
+                    state.nextBlackoutIn--;
+                    if (state.nextBlackoutIn <= 0) {
+                        triggerBlackout();
+                    }
+                }
+
+                let taskChanged = false;
+                for (let r = 0; r < 3; r++) {
+                    const t = state.roomTasks[r];
+                    if (!t.active) {
+                        t.cooldown--;
+                        if (t.cooldown <= 0) {
+                            t.active = true;
+                            playTone('click', 780);
+                            taskChanged = true;
+                        }
+                    }
+                }
+                if (taskChanged) {
+                    renderStationHeader();
+                    updateRoomTaskButton();
+                }
+
+                broadcastSync('STATE_UPDATE');
+            }
+
+            if (state.timeLeft <= 0) {
+                finishGame(false);
+            }
+        }
+
+        function registerStrike(reason = 'Error de procedimiento') {
+            if (state.status !== 'playing') return;
+            state.strikes++;
+            playTone('strike');
+
+            if (state.role === 'station') {
+                renderStationHeader();
+                broadcastSync('STATE_UPDATE');
+            } else {
+                updateNasaHUD(state.modules.filter(m => m.solved).length, state.modules.length);
+                addNasaLog(`❌ Strike registrado: ${reason}`);
+            }
+
+            if (state.strikes >= state.maxStrikes) {
+                finishGame(false);
+            }
+        }
+
+        function checkVictory() {
+            const allSolved = state.modules.every(m => m.solved);
+            if (allSolved) {
+                finishGame(true);
+            }
+        }
+
+        function finishGame(isWin) {
+            state.status = isWin ? 'won' : 'lost';
+            clearInterval(timerInterval);
+            simonTimers.forEach(t => clearTimeout(t));
+            if (state.uploadInterval) clearInterval(state.uploadInterval);
+
+            if (state.role === 'station') {
+                broadcastSync('STATE_UPDATE');
+            }
+
+            playTone(isWin ? 'solved' : 'blackout');
+
+            if (!isWin && state.role === 'nasa') {
+                const elapsedRatio = 1 - (Math.max(0, state.timeLeft) / state.initialTime);
+                const cause = state.timeLeft <= 0 ? 'earth' : 'route';
+                updateNasaShipPosition(elapsedRatio, cause);
+            }
+
+            const showModalDelay = (!isWin && state.role === 'nasa') ? 950 : 0;
+
+            setTimeout(() => {
+                const modal = document.getElementById('endGameModal');
+                document.getElementById('endIcon').textContent = isWin ? '🏆' : '💥';
+                document.getElementById('endTitle').textContent = isWin ? '¡MISIÓN CUMPLIDA!' : '¡ESTACIÓN PERDIDA!';
+                document.getElementById('endTitle').className = isWin
+                    ? 'text-3xl font-extrabold text-emerald-400 mb-2'
+                    : 'text-3xl font-extrabold text-red-500 mb-2';
+                document.getElementById('endSubtitle').textContent = isWin
+                    ? 'Excelente coordinación entre Houston y la Estación Espacial. Todos los sistemas están estables.'
+                    : (state.timeLeft <= 0
+                        ? 'La nave se estrelló contra la Tierra al agotarse el tiempo orbital.'
+                        : 'La nave estalló en órbita tras acumular 3 fallos críticos en los módulos.');
+
+                document.getElementById('endSeed').textContent = state.seed;
+                document.getElementById('endTime').textContent = formatTime(state.timeLeft);
+                document.getElementById('endStrikes').textContent = `${state.strikes} / 3`;
+                modal.classList.remove('hidden');
+            }, showModalDelay);
+        }
+
+        // --- 6. ACTUALIZACIÓN DE INTERFAZ JUGADOR 1 (NASA) ---
+        function updateNasaHUD(solvedCount, totalModules) {
+            document.getElementById('nasaSolvedCounter').textContent = `${solvedCount}/${totalModules}`;
+
+            const box = document.getElementById('nasaStrikesBox');
+            box.innerHTML = '';
+            for (let i = 0; i < 3; i++) {
+                const active = i < state.strikes;
+                box.innerHTML += `<span class="w-8 h-8 sm:w-9 sm:h-9 rounded-full border-[3px] border-[#233140] flex items-center justify-center text-sm sm:text-base font-extrabold transition-all ${
+                    active
+                        ? 'bg-[#ef4444] text-white shadow-[0_0_12px_#ef4444] scale-105'
+                        : 'bg-[#eef4fa] text-transparent'
+                }">✕</span>`;
+            }
+
+            const alertBox = document.getElementById('nasaBlackoutAlert');
+            if (state.blackout) alertBox.classList.remove('hidden');
+            else alertBox.classList.add('hidden');
+        }
+
+        function addNasaLog(text) {
+            const log = document.getElementById('nasaEventLog');
+            const line = document.createElement('div');
+            line.textContent = `[${formatTime(state.timeLeft)}] ${text}`;
+            log.appendChild(line);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // --- 7. INTERFAZ Y RENDERIZADO JUGADOR 2 (ESTACIÓN ESPACIAL) ---
+        const ROOM_INFO = [
+            {
+                subtitle: 'SALA 01 • PROA',
+                title: 'Puente de Mando y Navegación',
+                desc: 'Ventanales orbitales hacia la Tierra. Consulta el Serial e Indicadores arriba.'
+            },
+            {
+                subtitle: 'SALA 02 • MÓDULO CENTRAL',
+                title: 'Laboratorio Científico Destiny',
+                desc: 'Cámaras de aislamiento, muestras biológicas y despensa espacial.'
+            },
+            {
+                subtitle: 'SALA 03 • POPA',
+                title: 'Sala de Motores y Energía',
+                desc: 'Reactores principales y Caja de Fusibles. Si ocurre un apagón, repara los cables aquí.'
+            }
+        ];
+
+        function renderStationHeader() {
+            document.getElementById('stationSerialDisplay').textContent = state.serial;
+
+            const indBox = document.getElementById('stationIndicatorsBox');
+            indBox.innerHTML = '';
+            Object.entries(state.indicators).forEach(([label, isOn]) => {
+                indBox.innerHTML += `
+                    <div class="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[#233140] border border-[#475d75]">
+                        <span class="w-2.5 h-2.5 rounded-full ${isOn ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' : 'bg-slate-600'}"></span>
+                        <span class="font-mono-tech text-[10px] sm:text-xs font-extrabold ${isOn ? 'text-white' : 'text-slate-400'}">${label}</span>
+                    </div>
+                `;
+            });
+
+            const strikesBox = document.getElementById('stationStrikesBox');
+            strikesBox.innerHTML = '';
+            for (let i = 0; i < 3; i++) {
+                const active = i < state.strikes;
+                strikesBox.innerHTML += `<span class="w-5 h-5 rounded-full border-2 border-[#233140] flex items-center justify-center text-[10px] font-extrabold ${
+                    active ? 'bg-red-500 text-white shadow-[0_0_8px_#ef4444]' : 'bg-[#eef4fa] text-transparent'
+                }">✕</span>`;
+            }
+
+            for (let r = 0; r < 3; r++) {
+                const pending = state.modules.filter(m => m.room === r && !m.solved).length;
+                const hasTask = state.roomTasks[r] && state.roomTasks[r].active;
+                const badge = document.getElementById(`roomBadge${r}`);
+                badge.textContent = (pending === 0 ? '✓' : pending) + (hasTask ? '!' : '');
+                badge.className = pending === 0 && !hasTask
+                    ? 'px-1.5 rounded-full text-[10px] bg-emerald-700 text-white'
+                    : (hasTask
+                        ? 'px-1.5 rounded-full text-[10px] bg-amber-400 text-[#233140] font-extrabold'
+                        : 'px-1.5 rounded-full text-[10px] bg-[#233140] text-amber-300');
+            }
+
+            const totalSolved = state.modules.filter(m => m.solved).length;
+            document.getElementById('totalProgressText').textContent = `Módulos desactivados: ${totalSolved} / ${state.modules.length}`;
+        }
+
+        function updateRoomTaskButton() {
+            const taskBtn = document.getElementById('openRoomTaskBtn');
+            const taskIcon = document.getElementById('roomTaskIcon');
+            const taskLabel = document.getElementById('roomTaskLabel');
+            const currentTask = state.roomTasks[state.currentRoom];
+
+            if (currentTask && currentTask.active) {
+                taskBtn.classList.remove('hidden');
+                if (state.currentRoom === 0) {
+                    taskIcon.textContent = '🔭';
+                    taskLabel.textContent = 'CALIBRAR TELESCOPIO';
+                } else if (state.currentRoom === 1) {
+                    taskIcon.textContent = '🥫';
+                    taskLabel.textContent = 'ORDENAR PROVISIONES';
+                } else {
+                    taskIcon.textContent = '📡';
+                    taskLabel.textContent = 'ENVIAR ARCHIVOS';
+                }
+            } else {
+                taskBtn.classList.add('hidden');
+            }
+        }
+
+        function switchRoom(roomIdx) {
+            state.currentRoom = (roomIdx + 3) % 3;
+            playTone('click');
+
+            document.querySelectorAll('.room-nav-btn').forEach((btn, idx) => {
+                if (idx === state.currentRoom) {
+                    btn.className = 'room-nav-btn py-1.5 px-2.5 sm:px-3 rounded-xl font-mono-tech text-[11px] sm:text-xs font-extrabold border-2 border-[#233140] bg-cyan-400 text-[#233140] flex items-center gap-1 cursor-pointer transition shadow relative';
+                } else {
+                    btn.className = 'room-nav-btn py-1.5 px-2.5 sm:px-3 rounded-xl font-mono-tech text-[11px] sm:text-xs font-bold border-2 border-[#233140] bg-[#4a5d70] text-slate-200 hover:bg-[#5b7187] flex items-center gap-1 cursor-pointer transition relative';
+                }
+            });
+
+            for (let r = 0; r < 3; r++) {
+                const decor = document.getElementById(`decor-room-${r}`);
+                if (decor) {
+                    if (r === state.currentRoom) decor.classList.remove('hidden');
+                    else decor.classList.add('hidden');
+                }
+            }
+
+            const info = ROOM_INFO[state.currentRoom];
+            document.getElementById('roomSubtitle').textContent = info.subtitle;
+            document.getElementById('roomTitle').textContent = info.title;
+            document.getElementById('roomDesc').textContent = `— ${info.desc}`;
+
+            const fuseBtn = document.getElementById('openFuseBoxBtn');
+            if (state.currentRoom === 2) {
+                fuseBtn.classList.remove('hidden');
+            } else {
+                fuseBtn.classList.add('hidden');
+            }
+
+            updateRoomTaskButton();
+            renderRoomModules();
+        }
+
+        function renderRoomModules() {
+            const grid = document.getElementById('roomModulesGrid');
+            grid.innerHTML = '';
+
+            const roomMods = state.modules.filter(m => m.room === state.currentRoom);
+
+            for (let slot = 0; slot < 2; slot++) {
+                const mod = roomMods[slot];
+
+                let outerFrameClass = 'bay-bridge';
+                let innerScreenClass = 'bay-bridge-screen text-[#1e293b]';
+
+                if (state.currentRoom === 1) {
+                    outerFrameClass = 'bay-lab';
+                    innerScreenClass = 'bay-lab-glass text-white';
+                } else if (state.currentRoom === 2) {
+                    const isWarmGold = (slot === 1);
+                    outerFrameClass = isWarmGold ? 'bay-engine-gold' : 'bay-engine-steel';
+                    innerScreenClass = isWarmGold ? 'bay-engine-screen-warm text-[#1e293b]' : 'bay-engine-screen-cool text-white';
+                }
+
+                const bayWrapper = document.createElement('div');
+                bayWrapper.className = `station-bay-frame ${outerFrameClass} p-3 sm:p-4 flex flex-col justify-between min-h-[275px] sm:min-h-[305px] ${state.blackout ? 'opacity-40 pointer-events-none' : ''}`;
+
+                const screwsHTML = `
+                    <span class="station-screw top-2 left-2"></span>
+                    <span class="station-screw top-2 right-2"></span>
+                    <span class="station-screw bottom-2 left-2"></span>
+                    <span class="station-screw bottom-2 right-2"></span>
+                `;
+
+                if (!mod) {
+                    let idleContent = '';
+                    if (state.currentRoom === 0) {
+                        idleContent = `
+                            <div class="flex flex-col items-center justify-center h-full opacity-80 text-center p-3">
+                                <span class="font-mono-tech text-xs font-extrabold text-[#0b3d91] tracking-wider">PANTALLA DE NAVEGACIÓN #0${slot + 1}</span>
+                                <span class="text-4xl my-2">🧭</span>
+                                <span class="font-mono-tech text-xs text-[#233140] font-bold">ÓRBITA SINCRONIZADA</span>
+                            </div>
+                        `;
+                    } else if (state.currentRoom === 1) {
+                        idleContent = `
+                            <div class="flex flex-col items-center justify-center h-full opacity-85 text-center p-3">
+                                <span class="font-mono-tech text-xs font-bold text-cyan-200 tracking-wider">${slot === 0 ? 'INCUBADORA DE CRISTAL' : 'CILINDRO DE CONTENCIÓN'}</span>
+                                <span class="text-4xl my-2">${slot === 0 ? '🧊' : '🧬'}</span>
+                                <span class="font-mono-tech text-xs text-slate-200">AMBIENTE ESTÉRIL NOMINAL</span>
+                            </div>
+                        `;
+                    } else {
+                        idleContent = `
+                            <div class="flex flex-col items-center justify-center h-full opacity-85 text-center p-3">
+                                <span class="font-mono-tech text-xs font-extrabold tracking-wider">${slot === 0 ? 'MONITOR DE PROPULSIÓN' : 'NÚCLEO TÉRMICO AUXILIAR'}</span>
+                                <span class="text-4xl my-2">${slot === 0 ? '🚀' : '⚡'}</span>
+                                <span class="font-mono-tech text-xs font-bold">FLUJO DE PLASMA ESTABLE</span>
+                            </div>
+                        `;
+                    }
+
+                    bayWrapper.innerHTML = `
+                        ${screwsHTML}
+                        <div class="${innerScreenClass} flex-1 p-4 flex flex-col justify-center items-center">
+                            ${idleContent}
+                        </div>
+                    `;
+                    grid.appendChild(bayWrapper);
+                    continue;
+                }
+
+                const isLightScreen = (state.currentRoom === 0 || (state.currentRoom === 2 && slot === 1));
+                const titleTextColor = isLightScreen ? 'text-[#233140]' : 'text-white';
+                const subTextColor = isLightScreen ? 'text-[#475569]' : 'text-cyan-200';
+
+                const headerHTML = `
+                    <div class="flex items-center justify-between border-b-2 ${isLightScreen ? 'border-[#233140]/20' : 'border-white/20'} pb-1.5 mb-2">
+                        <div>
+                            <span class="text-[9px] font-mono-tech font-extrabold ${subTextColor} uppercase block leading-none">MÓDULO #0${mod.id + 1}</span>
+                            <h3 class="text-sm sm:text-base font-extrabold ${titleTextColor} leading-tight">${mod.title}</h3>
+                        </div>
+                        <div class="led-status ${mod.solved ? 'led-solved' : 'led-off'}" id="led-mod-${mod.id}"></div>
+                    </div>
+                `;
+
+                let bodyHTML = '';
+
+                if (mod.type === 'wires') {
+                    const colorStyles = {
+                        red: 'bg-red-500 border-[#233140]',
+                        blue: 'bg-blue-500 border-[#233140]',
+                        yellow: 'bg-amber-400 border-[#233140]',
+                        white: 'bg-white border-[#233140]',
+                        black: 'bg-slate-800 border-[#233140]'
+                    };
+                    const colorNames = { red: 'ROJO', blue: 'AZUL', yellow: 'AMARILLO', white: 'BLANCO', black: 'NEGRO' };
+
+                    let wiresHTML = '<div class="space-y-2 my-auto">';
+                    mod.wires.forEach((w, idx) => {
+                        wiresHTML += `
+                            <div class="flex items-center gap-2">
+                                <span class="font-mono-tech text-xs font-extrabold ${titleTextColor} w-4">${idx + 1}</span>
+                                <button data-mod="${mod.id}" data-wire="${idx}" ${mod.solved || w.cut ? 'disabled' : ''}
+                                    class="wire-cut-btn flex-1 h-4.5 py-0.5 rounded-full border-2 ${colorStyles[w.color]} relative cursor-pointer transition hover:brightness-110 flex items-center justify-center shadow-sm">
+                                    ${w.cut
+                                        ? '<span class="px-2 py-0 bg-[#233140] text-red-400 font-mono-tech text-[9px] font-bold rounded">✂️ CORTADO</span>'
+                                        : `<span class="text-[9px] font-mono-tech font-extrabold px-1.5 rounded bg-[#233140]/75 text-white">${colorNames[w.color]}</span>`
+                                    }
+                                </button>
+                            </div>
+                        `;
+                    });
+                    wiresHTML += '</div>';
+                    bodyHTML = wiresHTML;
+                }
+
+                else if (mod.type === 'symbols') {
+                    let btnsHTML = '<div class="grid grid-cols-2 gap-2 my-auto">';
+                    mod.buttons.forEach((sym) => {
+                        const isPressed = mod.pressed.includes(sym);
+                        btnsHTML += `
+                            <button data-mod="${mod.id}" data-sym="${sym}" ${mod.solved || isPressed ? 'disabled' : ''}
+                                class="sym-btn py-2.5 rounded-xl border-2 border-[#233140] font-bold text-2xl transition cursor-pointer flex flex-col items-center justify-center
+                                ${isPressed
+                                    ? 'bg-emerald-500 text-white shadow-inner'
+                                    : 'bg-white/90 hover:bg-white text-[#233140] shadow-[0_3px_0_#233140]'}">
+                                <span>${sym}</span>
+                                <span class="w-5 h-1 rounded-full mt-1 ${isPressed ? 'bg-white' : 'bg-slate-400'}"></span>
+                            </button>
+                        `;
+                    });
+                    btnsHTML += '</div>';
+                    bodyHTML = btnsHTML;
+                }
+
+                else if (mod.type === 'button') {
+                    const bgMap = {
+                        blue: 'bg-blue-500 border-[#233140] text-white',
+                        white: 'bg-white border-[#233140] text-[#233140]',
+                        red: 'bg-red-500 border-[#233140] text-white',
+                        yellow: 'bg-amber-400 border-[#233140] text-[#233140]'
+                    };
+                    const stripMap = {
+                        blue: 'bg-blue-500 shadow-[0_0_12px_#3b82f6]',
+                        yellow: 'bg-amber-400 shadow-[0_0_12px_#fbbf24]',
+                        green: 'bg-emerald-500 shadow-[0_0_12px_#10b981]'
+                    };
+
+                    bodyHTML = `
+                        <div class="flex items-center justify-center gap-5 my-auto">
+                            <button id="ign-btn-${mod.id}" data-mod="${mod.id}" ${mod.solved ? 'disabled' : ''}
+                                class="ignition-btn w-24 h-24 rounded-full border-[3px] ${bgMap[mod.btnColor]} font-mono-tech font-extrabold text-xs tracking-wider cursor-pointer flex items-center justify-center">
+                                ${mod.btnLabel}
+                            </button>
+                            <div class="flex flex-col items-center">
+                                <span class="text-[9px] font-mono-tech font-extrabold ${subTextColor} mb-1">LUZ</span>
+                                <div id="ign-strip-${mod.id}" class="w-4 h-20 rounded-full border-2 border-[#233140] bg-[#233140] transition-all duration-200" data-color-class="${stripMap[mod.stripColor]}"></div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                else if (mod.type === 'switches') {
+                    let swHTML = `
+                        <div class="bg-[#233140] border-2 border-[#141d26] rounded-lg py-1 px-2 text-center mb-2">
+                            <span class="text-[9px] font-mono-tech text-slate-300">CANAL: </span>
+                            <span class="font-mono-tech text-xs font-extrabold text-cyan-300">${mod.freq}</span>
+                        </div>
+                        <div class="grid grid-cols-4 gap-1.5 mb-2">
+                    `;
+                    mod.current.forEach((isUp, idx) => {
+                        swHTML += `
+                            <button data-mod="${mod.id}" data-sw="${idx}" ${mod.solved ? 'disabled' : ''}
+                                class="sw-toggle-btn bg-[#233140] border-2 border-[#141d26] rounded-lg p-1.5 flex flex-col items-center cursor-pointer hover:border-cyan-400 transition">
+                                <span class="text-[9px] font-mono-tech text-slate-300 mb-0.5">SW${idx + 1}</span>
+                                <div class="w-6 h-9 rounded bg-slate-900 border border-slate-700 p-0.5 flex flex-col ${isUp ? 'justify-start' : 'justify-end'}">
+                                    <div class="w-full h-4 rounded-sm ${isUp ? 'bg-emerald-400 shadow-[0_0_6px_#34d399]' : 'bg-slate-500'}"></div>
+                                </div>
+                                <span class="text-[8px] font-mono-tech mt-0.5 ${isUp ? 'text-emerald-300 font-bold' : 'text-slate-400'}">${isUp ? 'ARR' : 'ABJ'}</span>
+                            </button>
+                        `;
+                    });
+                    swHTML += `</div>
+                        <button data-mod="${mod.id}" ${mod.solved ? 'disabled' : ''}
+                            class="sw-submit-btn w-full py-1.5 rounded-lg bg-[#0b3d91] hover:bg-blue-700 disabled:bg-slate-600 border-2 border-[#233140] text-white font-mono-tech text-[11px] font-extrabold tracking-wider cursor-pointer transition">
+                            APLICAR
+                        </button>
+                    `;
+                    bodyHTML = swHTML;
+                }
+
+                bayWrapper.innerHTML = `
+                    ${screwsHTML}
+                    <div class="${innerScreenClass} flex-1 p-2.5 sm:p-3 flex flex-col justify-between">
+                        ${headerHTML}
+                        ${bodyHTML}
+                    </div>
+                `;
+
+                grid.appendChild(bayWrapper);
+            }
+
+            attachModuleEvents();
+        }
+
+        function attachModuleEvents() {
+            document.querySelectorAll('.wire-cut-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (state.blackout) return;
+                    const mod = state.modules[parseInt(btn.dataset.mod)];
+                    const wIdx = parseInt(btn.dataset.wire);
+                    if (mod.solved || mod.wires[wIdx].cut) return;
+
+                    mod.wires[wIdx].cut = true;
+                    playTone('snip');
+
+                    if (wIdx === mod.targetIndex) {
+                        mod.solved = true;
+                        playTone('solved');
+                        renderStationHeader();
+                        renderRoomModules();
+                        broadcastSync('STATE_UPDATE');
+                        checkVictory();
+                    } else {
+                        renderRoomModules();
+                        registerStrike('Cable incorrecto cortado');
+                    }
+                });
+            });
+
+            document.querySelectorAll('.sym-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (state.blackout) return;
+                    const mod = state.modules[parseInt(btn.dataset.mod)];
+                    const sym = btn.dataset.sym;
+                    if (mod.solved) return;
+
+                    const expectedSym = mod.correctOrder[mod.pressed.length];
+                    if (sym === expectedSym) {
+                        playTone('click');
+                        mod.pressed.push(sym);
+                        if (mod.pressed.length === 4) {
+                            mod.solved = true;
+                            playTone('solved');
+                            renderStationHeader();
+                            checkVictory();
+                        }
+                        renderRoomModules();
+                        broadcastSync('STATE_UPDATE');
+                    } else {
+                        mod.pressed = [];
+                        renderRoomModules();
+                        registerStrike('Secuencia de constelaciones incorrecta');
+                    }
+                });
+            });
+
+            document.querySelectorAll('.ignition-btn').forEach(btn => {
+                const mod = state.modules[parseInt(btn.dataset.mod)];
+                let pressStartTime = 0;
+
+                const onDown = (e) => {
+                    e.preventDefault();
+                    if (state.blackout || mod.solved) return;
+                    pressStartTime = Date.now();
+                    btn.classList.add('held');
+                    const strip = document.getElementById(`ign-strip-${mod.id}`);
+                    if (strip) strip.className = `w-4 h-20 rounded-full border-2 border-white transition-all ${strip.dataset.colorClass}`;
+                };
+
+                const onUp = (e) => {
+                    e.preventDefault();
+                    if (pressStartTime === 0 || mod.solved) return;
+                    const heldDuration = Date.now() - pressStartTime;
+                    pressStartTime = 0;
+                    btn.classList.remove('held');
+
+                    const strip = document.getElementById(`ign-strip-${mod.id}`);
+                    if (strip) strip.className = 'w-4 h-20 rounded-full border-2 border-[#233140] bg-[#233140] transition-all duration-200';
+
+                    const currentClockStr = formatTime(state.timeLeft);
+
+                    if (!mod.mustHold) {
+                        if (heldDuration < 550) {
+                            mod.solved = true;
+                            playTone('solved');
+                            renderStationHeader();
+                            renderRoomModules();
+                            broadcastSync('STATE_UPDATE');
+                            checkVictory();
+                        } else {
+                            registerStrike('Debía soltarse inmediatamente');
+                        }
+                    } else {
+                        if (heldDuration >= 450 && currentClockStr.includes(mod.requiredDigit)) {
+                            mod.solved = true;
+                            playTone('solved');
+                            renderStationHeader();
+                            renderRoomModules();
+                            broadcastSync('STATE_UPDATE');
+                            checkVictory();
+                        } else {
+                            registerStrike(`Botón soltado en tiempo incorrecto (${currentClockStr})`);
+                        }
+                    }
+                };
+
+                btn.addEventListener('mousedown', onDown);
+                btn.addEventListener('touchstart', onDown, { passive: false });
+                btn.addEventListener('mouseup', onUp);
+                btn.addEventListener('touchend', onUp, { passive: false });
+            });
+
+            document.querySelectorAll('.sw-toggle-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (state.blackout) return;
+                    const mod = state.modules[parseInt(btn.dataset.mod)];
+                    const swIdx = parseInt(btn.dataset.sw);
+                    if (mod.solved) return;
+                    mod.current[swIdx] = !mod.current[swIdx];
+                    playTone('click');
+                    renderRoomModules();
+                });
+            });
+
+            document.querySelectorAll('.sw-submit-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (state.blackout) return;
+                    const mod = state.modules[parseInt(btn.dataset.mod)];
+                    if (mod.solved) return;
+
+                    const isMatch = mod.current.every((val, i) => val === mod.solution[i]);
+                    if (isMatch) {
+                        mod.solved = true;
+                        playTone('solved');
+                        renderStationHeader();
+                        renderRoomModules();
+                        broadcastSync('STATE_UPDATE');
+                        checkVictory();
+                    } else {
+                        registerStrike('Combinación de interruptores errónea');
+                    }
+                });
+            });
+        }
+
+        // --- 8. EVENTO ALEATORIO DE APAGÓN Y CAJA DE FUSIBLES ---
+        function triggerBlackout() {
+            state.blackout = true;
+            playTone('blackout');
+
+            document.getElementById('blackoutMask').classList.remove('hidden');
+            document.getElementById('stationBlackoutBanner').classList.remove('hidden');
+            document.getElementById('fuseAlertDot').classList.remove('hidden');
+
+            renderRoomModules();
+            broadcastSync('STATE_UPDATE');
+        }
+
+        function initFuseBoxMinigame() {
+            const colors = [
+                { id: 'red', hex: '#ef4444', label: 'ROJO' },
+                { id: 'blue', hex: '#3b82f6', label: 'AZUL' },
+                { id: 'yellow', hex: '#facc15', label: 'AMARILLO' },
+                { id: 'green', hex: '#22c55e', label: 'VERDE' }
+            ];
+
+            state.fusePuzzle = {
+                left: [...colors].sort(() => Math.random() - 0.5),
+                right: [...colors].sort(() => Math.random() - 0.5),
+                connections: {},
+                selectedLeft: null
+            };
+
+            renderFuseBoard();
+        }
+
+        function renderFuseBoard() {
+            const leftCol = document.getElementById('fuseLeftCol');
+            const rightCol = document.getElementById('fuseRightCol');
+            leftCol.innerHTML = '';
+            rightCol.innerHTML = '';
+
+            state.fusePuzzle.left.forEach((c) => {
+                const isSelected = state.fusePuzzle.selectedLeft === c.id;
+                leftCol.innerHTML += `
+                    <button data-side="left" data-color="${c.id}"
+                        class="fuse-node w-14 h-9 rounded-r-xl border-2 ${isSelected ? 'border-white scale-110' : 'border-slate-700'} flex items-center justify-end pr-2 cursor-pointer transition shadow-md"
+                        style="background-color: ${c.hex}">
+                        <span class="w-3 h-3 rounded-full bg-slate-950/70"></span>
+                    </button>
+                `;
+            });
+
+            state.fusePuzzle.right.forEach((c) => {
+                rightCol.innerHTML += `
+                    <button data-side="right" data-color="${c.id}"
+                        class="fuse-node w-14 h-9 rounded-l-xl border-2 border-slate-700 flex items-center justify-start pl-2 cursor-pointer transition hover:scale-105 shadow-md"
+                        style="background-color: ${c.hex}">
+                        <span class="w-3 h-3 rounded-full bg-slate-950/70"></span>
+                    </button>
+                `;
+            });
+
+            drawFuseSVG();
+
+            document.querySelectorAll('.fuse-node').forEach(node => {
+                node.addEventListener('click', () => {
+                    const side = node.dataset.side;
+                    const color = node.dataset.color;
+
+                    if (side === 'left') {
+                        if (state.fusePuzzle.connections[color]) return;
+                        state.fusePuzzle.selectedLeft = color;
+                        playTone('click');
+                        renderFuseBoard();
+                    } else if (side === 'right' && state.fusePuzzle.selectedLeft) {
+                        if (state.fusePuzzle.selectedLeft === color) {
+                            state.fusePuzzle.connections[color] = true;
+                            state.fusePuzzle.selectedLeft = null;
+                            playTone('solved');
+                            renderFuseBoard();
+
+                            if (Object.keys(state.fusePuzzle.connections).length === 4) {
+                                restorePowerFromFuseBox();
+                            }
+                        } else {
+                            state.fusePuzzle.selectedLeft = null;
+                            playTone('strike');
+                            renderFuseBoard();
+                        }
+                    }
+                });
+            });
+        }
+
+        function drawFuseSVG() {
+            const svg = document.getElementById('fuseWiresSvg');
+            const board = document.getElementById('fuseBoard');
+            if (!svg || !board) return;
+
+            const w = board.clientWidth || 420;
+            svg.innerHTML = '';
+
+            const colorHexMap = { red: '#ef4444', blue: '#3b82f6', yellow: '#facc15', green: '#22c55e' };
+            const yPositions = [36, 108, 180, 252];
+
+            Object.keys(state.fusePuzzle.connections).forEach(color => {
+                const lIdx = state.fusePuzzle.left.findIndex(item => item.id === color);
+                const rIdx = state.fusePuzzle.right.findIndex(item => item.id === color);
+                if (lIdx === -1 || rIdx === -1) return;
+
+                const y1 = yPositions[lIdx];
+                const y2 = yPositions[rIdx];
+
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', '72');
+                line.setAttribute('y1', y1);
+                line.setAttribute('x2', w - 72);
+                line.setAttribute('y2', y2);
+                line.setAttribute('stroke', colorHexMap[color]);
+                line.setAttribute('stroke-width', '10');
+                line.setAttribute('stroke-linecap', 'round');
+                svg.appendChild(line);
+            });
+        }
+
+        function restorePowerFromFuseBox() {
+            document.getElementById('fuseStatusMsg').textContent = '✅ ¡ENERGÍA RESTABLECIDA EN TODA LA ESTACIÓN!';
+            document.getElementById('fuseStatusMsg').className = 'mt-4 text-center font-mono-tech text-xs text-emerald-400 font-bold';
+            playTone('poweron');
+
+            setTimeout(() => {
+                state.blackout = false;
+                state.nextBlackoutIn = state.difficulty === 'hard' ? 40 : 55;
+                document.getElementById('fuseBoxModal').classList.add('hidden');
+                document.getElementById('blackoutMask').classList.add('hidden');
+                document.getElementById('stationBlackoutBanner').classList.add('hidden');
+                document.getElementById('fuseAlertDot').classList.add('hidden');
+                renderRoomModules();
+                broadcastSync('STATE_UPDATE');
+            }, 650);
+        }
+
+        // --- 9. EVENTOS DE INTERFAZ Y NAVEGACIÓN ---
+        function updateFlashlightPosition(clientX, clientY) {
+            document.documentElement.style.setProperty('--cursor-x', clientX + 'px');
+            document.documentElement.style.setProperty('--cursor-y', clientY + 'px');
+        }
+        window.addEventListener('mousemove', (e) => updateFlashlightPosition(e.clientX, e.clientY));
+        window.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) updateFlashlightPosition(e.touches[0].clientX, e.touches[0].clientY);
+        }, { passive: true });
+
+        // Lobby: Botón semilla aleatoria
+        document.getElementById('randomSeedBtn').addEventListener('click', () => {
+            const prefixes = ['APOLO', 'ORION', 'ARTEMIS', 'GEMINIS', 'VOYAGER', 'HUBBLE'];
+            const p = prefixes[Math.floor(Math.random() * prefixes.length)];
+            const n = Math.floor(Math.random() * 89) + 10;
+            document.getElementById('missionSeedInput').value = `${p}-${n}`;
+        });
+
+        // Lobby: Abrir 2da ventana
+        document.getElementById('openSecondWindowBtn').addEventListener('click', () => {
+            window.open(window.location.href, '_blank');
+        });
+
+        // Lobby: Selección de dificultad
+        document.querySelectorAll('.diff-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                state.difficulty = btn.dataset.diff;
+                document.querySelectorAll('.diff-btn').forEach(b => {
+                    b.className = 'diff-btn py-3 px-2 rounded-xl border font-mono-tech text-xs sm:text-sm font-bold transition cursor-pointer bg-slate-900 border-slate-700 text-slate-300';
+                });
+                btn.className = 'diff-btn py-3 px-2 rounded-xl border font-mono-tech text-xs sm:text-sm font-bold transition cursor-pointer bg-blue-600/25 border-cyan-400 text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.2)]';
+
+                const descMap = {
+                    easy: 'Ideal para aprender: 3 módulos (1 por sala), 5:30 minutos y apagones poco frecuentes.',
+                    normal: 'Equilibrado: 5 módulos repartidos en 3 salas, 5:00 minutos, apagones y tareas de estación.',
+                    hard: 'Alerta máxima: 6 módulos (2 por sala), 4:30 minutos y tormentas solares frecuentes.'
+                };
+                document.getElementById('diffDesc').textContent = descMap[state.difficulty];
+            });
+        });
+
+        // Lobby: Iniciar Rol NASA o Estación
+        document.getElementById('selectRoleNasaBtn').addEventListener('click', () => startMission('nasa'));
+        document.getElementById('selectRoleStationBtn').addEventListener('click', () => startMission('station'));
+
+        // NASA: Pestañas del manual
+        document.querySelectorAll('.manual-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const target = tab.dataset.tab;
+                document.querySelectorAll('.manual-tab').forEach(t => {
+                    if (t.dataset.tab === 'blackout') {
+                        t.className = 'manual-tab px-2 py-1 rounded-lg font-mono-tech text-[10px] sm:text-[11px] font-bold bg-amber-200 text-amber-950 border border-amber-500 hover:bg-amber-300 cursor-pointer transition';
+                    } else if (t.dataset.tab === 'tasks') {
+                        t.className = 'manual-tab px-2 py-1 rounded-lg font-mono-tech text-[10px] sm:text-[11px] font-bold bg-emerald-200 text-emerald-950 border border-emerald-500 hover:bg-emerald-300 cursor-pointer transition';
+                    } else {
+                        t.className = 'manual-tab px-2 py-1 rounded-lg font-mono-tech text-[10px] sm:text-[11px] font-bold bg-white text-[#233140] border border-[#94a3b8] hover:bg-slate-100 cursor-pointer transition';
+                    }
+                });
+                tab.className = 'manual-tab px-2 py-1 rounded-lg font-mono-tech text-[10px] sm:text-[11px] font-extrabold bg-[#0b3d91] text-white border border-[#233140] cursor-pointer transition';
+
+                document.querySelectorAll('.manual-content').forEach(c => c.classList.add('hidden'));
+                document.getElementById(`tab-${target}`).classList.remove('hidden');
+            });
+        });
+
+        document.getElementById('nasaAddStrikeBtn').addEventListener('click', () => {
+            registerStrike('Fallo registrado por Houston');
+            if (channel) {
+                channel.postMessage({ type: 'NASA_ADD_STRIKE', seed: state.seed });
+            }
+        });
+
+        // Estación: Navegación entre las 3 salas
+        document.querySelectorAll('.room-nav-btn').forEach(btn => {
+            btn.addEventListener('click', () => switchRoom(parseInt(btn.dataset.room)));
+        });
+        document.getElementById('prevRoomBtn').addEventListener('click', () => switchRoom(state.currentRoom - 1));
+        document.getElementById('nextRoomBtn').addEventListener('click', () => switchRoom(state.currentRoom + 1));
+
+        // Estación: Caja de Fusibles
+        document.getElementById('openFuseBoxBtn').addEventListener('click', () => {
+            document.getElementById('fuseBoxModal').classList.remove('hidden');
+            document.getElementById('fuseStatusMsg').textContent = state.blackout
+                ? 'Estado: Sistema sin energía. Conecta los 4 cables.'
+                : 'Estado: Energía nominal (Mantenimiento preventivo).';
+            document.getElementById('fuseStatusMsg').className = 'mt-4 text-center font-mono-tech text-xs text-amber-300';
+            initFuseBoxMinigame();
+        });
+        document.getElementById('closeFuseBoxBtn').addEventListener('click', () => {
+            document.getElementById('fuseBoxModal').classList.add('hidden');
+        });
+
+        function renderCurrentFoodItem() {
+            const total = 6;
+            const rem = state.foodQueue.length;
+            const badge = document.getElementById('foodProgressBadge');
+            if (badge) badge.textContent = `Restantes: ${rem} / ${total}`;
+
+            if (rem === 0) {
+                playTone('solved');
+                const emojiEl = document.getElementById('currentFoodEmoji');
+                const nameEl = document.getElementById('currentFoodName');
+                if (emojiEl) emojiEl.textContent = '✅';
+                if (nameEl) nameEl.textContent = '¡Despensa del laboratorio ordenada!';
+                completeCurrentRoomTask(38);
+                return;
+            }
+
+            const current = state.foodQueue[0];
+            const emojiEl = document.getElementById('currentFoodEmoji');
+            const nameEl = document.getElementById('currentFoodName');
+            if (emojiEl) emojiEl.textContent = current.emoji;
+            if (nameEl) nameEl.textContent = current.name;
+        }
+
+        function handleFoodSort(chosenType) {
+            if (state.foodQueue.length === 0) return;
+            const current = state.foodQueue[0];
+            const statusEl = document.getElementById('foodTaskStatus');
+            if (current.type === chosenType) {
+                playTone('click', 720);
+                state.foodQueue.shift();
+                if (statusEl) statusEl.textContent = '✓ Ración almacenada correctamente.';
+                renderCurrentFoodItem();
+            } else {
+                playTone('strike');
+                if (statusEl) statusEl.textContent = '❌ Contenedor equivocado. Revisa la etiqueta del suministro.';
+            }
+        }
+
+        function openRoomTaskModal() {
+            if (state.blackout) return;
+            const modal = document.getElementById('roomTaskModal');
+            const modalBox = document.getElementById('roomTaskModalBox');
+            const zoneTag = document.getElementById('taskModalZoneTag');
+            const title = document.getElementById('taskModalTitle');
+            const body = document.getElementById('taskModalBody');
+
+            if (state.uploadInterval) {
+                clearInterval(state.uploadInterval);
+                state.uploadInterval = null;
+            }
+
+            modal.classList.remove('hidden');
+            playTone('click');
+
+            // ZONA 0: PUENTE DE MANDO -> Calibrar Telescopio (Buscar Estrella v0.2)
+            if (state.currentRoom === 0) {
+                modalBox.className = 'w-full max-w-lg bg-slate-900 border-2 border-indigo-500/70 rounded-3xl p-6 shadow-2xl relative';
+                zoneTag.className = 'text-[10px] font-mono-tech uppercase text-indigo-400 font-bold';
+                zoneTag.textContent = 'NAVEGACIÓN ASTRONÓMICA • PUENTE DE MANDO';
+                title.textContent = '🔭 Localizar Estrella Guía';
+
+                body.innerHTML = `
+                    <p class="text-xs text-slate-300">
+                        El sensor óptico está desalineado. Encuentra y pulsa la <strong>Estrella Brillante (⭐)</strong> oculta entre los asteroides y nebulosas del visor.
+                    </p>
+                    <div id="starFieldContainer" class="relative w-full h-72 bg-[#03050c] border-2 border-indigo-500/40 rounded-2xl overflow-hidden cursor-crosshair shadow-inner"></div>
+                    <div id="starTaskStatus" class="text-center font-mono-tech text-xs text-indigo-300">
+                        Escaneando cuadrante estelar...
+                    </div>
+                `;
+
+                const container = document.getElementById('starFieldContainer');
+                const decoys = ['☄️', '🛰️', '🌑', '🪐', '🛸', '✨', '💫', '🪨'];
+                for (let i = 0; i < 16; i++) {
+                    const decoy = document.createElement('button');
+                    decoy.type = 'button';
+                    decoy.textContent = decoys[i % decoys.length];
+                    decoy.className = 'absolute text-xl sm:text-2xl opacity-65 hover:opacity-100 transition cursor-pointer';
+                    decoy.style.left = `${Math.floor(Math.random() * 84) + 5}%`;
+                    decoy.style.top = `${Math.floor(Math.random() * 78) + 8}%`;
+                    decoy.addEventListener('click', () => {
+                        playTone('strike');
+                        document.getElementById('starTaskStatus').textContent = '⚠️ Ese objeto no es la estrella guía. Sigue buscando.';
+                    });
+                    container.appendChild(decoy);
+                }
+
+                const targetStar = document.createElement('button');
+                targetStar.type = 'button';
+                targetStar.textContent = '⭐';
+                targetStar.className = 'star-target absolute text-2xl sm:text-3xl cursor-pointer z-10';
+                targetStar.style.left = `${Math.floor(Math.random() * 80) + 8}%`;
+                targetStar.style.top = `${Math.floor(Math.random() * 72) + 10}%`;
+                targetStar.addEventListener('click', () => {
+                    playTone('solved');
+                    document.getElementById('starTaskStatus').textContent = '✅ ¡Estrella guía fijada! Telescopio calibrado.';
+                    completeCurrentRoomTask(35);
+                });
+                container.appendChild(targetStar);
+            }
+
+            // ZONA 1: LABORATORIO -> Ordenar Provisiones (Enlatados vs Deshidratados v0.2)
+            else if (state.currentRoom === 1) {
+                modalBox.className = 'w-full max-w-lg bg-slate-900 border-2 border-emerald-500/70 rounded-3xl p-6 shadow-2xl relative';
+                zoneTag.className = 'text-[10px] font-mono-tech uppercase text-emerald-400 font-bold';
+                zoneTag.textContent = 'GESTIÓN DE BIOMASA • LABORATORIO';
+                title.textContent = '🥫 Clasificar Raciones Espaciales';
+
+                const catalog = [
+                    { type: 'can', emoji: '🥫', name: 'Lata de Sopa Orbital' },
+                    { type: 'can', emoji: '🥫', name: 'Conserva de Frijoles Espaciales' },
+                    { type: 'can', emoji: '🥫', name: 'Atún Presurizado NASA' },
+                    { type: 'dehydrated', emoji: '📦', name: 'Paquete de Fruta Liofilizada' },
+                    { type: 'dehydrated', emoji: '📦', name: 'Bolsa de Helado Deshidratado' },
+                    { type: 'dehydrated', emoji: '📦', name: 'Ración Seca de Vegetales' }
+                ];
+                state.foodQueue = [...catalog].sort(() => Math.random() - 0.5);
+
+                body.innerHTML = `
+                    <p class="text-xs text-slate-300">
+                        La gravedad cero desordenó la despensa. Clasifica el suministro actual enviando los <strong>Enlatados (🥫)</strong> a la izquierda y los <strong>Alimentos Deshidratados (📦)</strong> a la derecha.
+                    </p>
+                    <div class="bg-slate-950 border border-slate-700 rounded-2xl p-5 text-center">
+                        <span id="foodProgressBadge" class="px-2.5 py-1 rounded-full bg-slate-800 font-mono-tech text-[11px] text-emerald-300">Restantes: 6 / 6</span>
+                        <div id="currentFoodItemBox" class="my-4 flex flex-col items-center justify-center">
+                            <span id="currentFoodEmoji" class="text-6xl mb-2 drop-shadow-lg">🥫</span>
+                            <span id="currentFoodName" class="font-mono-tech text-sm font-bold text-white">Lata de Sopa Orbital</span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button id="sortCanBtn" type="button" class="py-4 px-3 rounded-2xl bg-amber-600/25 hover:bg-amber-600/40 border-2 border-amber-400 text-amber-200 font-mono-tech text-xs font-bold flex flex-col items-center gap-1 cursor-pointer transition">
+                            <span class="text-2xl">🥫</span>
+                            <span>ESTANTE ENLATADOS</span>
+                        </button>
+                        <button id="sortDehydratedBtn" type="button" class="py-4 px-3 rounded-2xl bg-cyan-600/25 hover:bg-cyan-600/40 border-2 border-cyan-400 text-cyan-200 font-mono-tech text-xs font-bold flex flex-col items-center gap-1 cursor-pointer transition">
+                            <span class="text-2xl">📦</span>
+                            <span>ESTANTE DESHIDRATADOS</span>
+                        </button>
+                    </div>
+                    <div id="foodTaskStatus" class="text-center font-mono-tech text-xs text-emerald-300">
+                        Selecciona el contenedor correcto para cada ración.
+                    </div>
+                `;
+
+                renderCurrentFoodItem();
+                document.getElementById('sortCanBtn').addEventListener('click', () => handleFoodSort('can'));
+                document.getElementById('sortDehydratedBtn').addEventListener('click', () => handleFoodSort('dehydrated'));
+            }
+
+            // ZONA 2: SALA DE MOTORES -> Enviar Archivos de Telemetría a Houston
+            else {
+                modalBox.className = 'w-full max-w-lg bg-slate-900 border-2 border-cyan-500/70 rounded-3xl p-6 shadow-2xl relative';
+                zoneTag.className = 'text-[10px] font-mono-tech uppercase text-cyan-400 font-bold';
+                zoneTag.textContent = 'ENLACE DE DATOS • SALA DE MOTORES';
+                title.textContent = '📡 Transmitir Telemetría a Houston';
+                state.uploadProgress = 0;
+
+                body.innerHTML = `
+                    <p class="text-xs text-slate-300">Transmite los registros del reactor a Control de Misión en Houston.</p>
+                    <div class="bg-slate-950 border-2 border-slate-700 rounded-2xl p-4 space-y-2">
+                        <div class="flex justify-between font-mono-tech text-xs">
+                            <span class="text-cyan-300">TELEMETRÍA_EEI.DAT</span>
+                            <span id="uploadPercentText" class="text-emerald-400 font-bold">0%</span>
+                        </div>
+                        <div class="w-full h-5 bg-slate-800 rounded-full overflow-hidden border border-slate-600">
+                            <div id="uploadProgressBar" class="h-full bg-gradient-to-r from-cyan-400 to-emerald-400 transition-all duration-150" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                    <button id="startUploadBtn" type="button" class="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-mono-tech font-extrabold text-sm cursor-pointer transition">
+                        INICIAR ENVÍO DE DATOS
+                    </button>
+                `;
+
+                document.getElementById('startUploadBtn').addEventListener('click', (e) => {
+                    e.target.disabled = true;
+                    e.target.textContent = 'TRANSMITIENDO A HOUSTON...';
+                    playTone('click');
+                    state.uploadInterval = setInterval(() => {
+                        state.uploadProgress += 10;
+                        const bar = document.getElementById('uploadProgressBar');
+                        const txt = document.getElementById('uploadPercentText');
+                        if (bar) bar.style.width = `${state.uploadProgress}%`;
+                        if (txt) txt.textContent = `${state.uploadProgress}%`;
+                        if (state.uploadProgress >= 100) {
+                            clearInterval(state.uploadInterval);
+                            state.uploadInterval = null;
+                            playTone('solved');
+                            completeCurrentRoomTask(40);
+                        }
+                    }, 220);
+                });
+            }
+        }
+
+        function completeCurrentRoomTask(nextCooldown) {
+            const room = state.currentRoom;
+            state.roomTasks[room].active = false;
+            state.roomTasks[room].cooldown = state.difficulty === 'hard' ? Math.max(22, nextCooldown - 10) : nextCooldown;
+            renderStationHeader();
+            updateRoomTaskButton();
+            setTimeout(() => {
+                document.getElementById('roomTaskModal').classList.add('hidden');
+            }, 600);
+        }
+
+        document.getElementById('openRoomTaskBtn').addEventListener('click', openRoomTaskModal);
+        document.getElementById('closeRoomTaskBtn').addEventListener('click', () => {
+            if (state.uploadInterval) {
+                clearInterval(state.uploadInterval);
+                state.uploadInterval = null;
+            }
+            document.getElementById('roomTaskModal').classList.add('hidden');
+        });
+
+        // Salir / Volver al Lobby
+        function returnToLobby() {
+            clearInterval(timerInterval);
+            if (state.uploadInterval) {
+                clearInterval(state.uploadInterval);
+                state.uploadInterval = null;
+            }
+            state.status = 'lobby';
+            state.blackout = false;
+            document.getElementById('nasaView').classList.add('hidden');
+            document.getElementById('stationView').classList.add('hidden');
+            document.getElementById('endGameModal').classList.add('hidden');
+            document.getElementById('roomTaskModal').classList.add('hidden');
+            document.getElementById('blackoutMask').classList.add('hidden');
+            document.getElementById('lobbyScreen').classList.remove('hidden');
+        }
+
+        document.getElementById('nasaExitBtn').addEventListener('click', returnToLobby);
+        document.getElementById('stationExitBtn').addEventListener('click', returnToLobby);
+        document.getElementById('backToLobbyBtn').addEventListener('click', returnToLobby);
+    </script>
+</body>
+</html>
