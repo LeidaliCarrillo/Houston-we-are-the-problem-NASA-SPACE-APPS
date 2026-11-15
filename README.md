@@ -36,9 +36,8 @@ npm install
 npm start
 ```
 
-- Control en tierra (Open MCT): http://localhost:8080/
-- Tablero del astronauta: http://localhost:8080/tablero.html
-
+- Control en tierra (Open MCT): https://nasa-space-apps-game-two.vercel.app/#/browse/aether.taxonomy:spacecraft/aether.taxonomy:console?tc.mode=local&tc.startDelta=300000&tc.endDelta=10000&tc.timeSystem=utc&view=layout.view
+- Tablero del astronauta: https://nasa-space-apps-game-two.vercel.app/tablero.html
 Para jugar en **varios computadores** de la misma red, usa las direcciones que muestra `npm start` al arrancar,
 que usan **https** y el puerto **8443** (ej. `https://192.168.1.20:8443/tablero.html`). Se necesita https para que el
 navegador permita usar el **micrófono** de la radio. El certificado lo genera el propio servidor (carpeta `.cert/`),
