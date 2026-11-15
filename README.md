@@ -14,7 +14,7 @@ Developed by:
 
 Cooperative Game in the Style of Keep Talking and Nobody Explodes
 
-- **Astronauta** → juega el tablero de reparación (`/tablero.html`).
+- **Astronauta** → juega el tablero de reparación (`https://nasa-space-apps-game-two.vercel.app/tablero.html`).
 - **Control en tierra** → monitorea la nave en **[NASA Open MCT](https://github.com/nasa/openmct)** (`/`) y guía al astronauta por voz con el manual (`/manual.html`, también dentro de Open MCT).
 
 El astronauta **no** tiene el manual. Control en tierra **no** ve el tablero, pero ve en Open MCT datos de la nave
