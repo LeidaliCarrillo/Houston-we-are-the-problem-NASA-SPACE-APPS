@@ -8,8 +8,8 @@ Desarrollado por:
 
 - **Leidalí Carrillo Fernández**
 - **Felipe Pereira Alarcón**
-- **Name Last_Name Participante 3**
-- **Name Last_Name Participante 4**
+- **Aldo Fabian Carrillo Morales**
+- **Jaqueline Adilene Carrillo Fernández**
 
 
 
